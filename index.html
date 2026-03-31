@@ -486,21 +486,35 @@ function loadInventory(){
 }
 
 // Add medicine
-function addMedicine(){
-  let med={
-    name:medName.value,
-    batch:batch.value,
-    exp:exp.value,
-    hsn:hsn.value,
-    purchase:purchase.value,
-    sell:sell.value,
-    mrp:mrpInv.value,
-    stock:stock.value
-  };
-  inventory.push(med);
-  localStorage.setItem("inventory",JSON.stringify(inventory));
-  loadInventory();
-  updateMRP();
+async function addMedicine() {
+  try {
+    // Get medicine data from inputs
+    let med = {
+      name: medName.value,
+      batch: batch.value,
+      exp: exp.value,
+      hsn: hsn.value,
+      purchase: parseFloat(purchase.value) || 0,
+      sell: parseFloat(sell.value) || 0,
+      mrp: parseFloat(mrpInv.value) || 0,
+      stock: parseInt(stock.value) || 0,
+      timestamp: serverTimestamp() // optional, to track when added
+    };
+
+    // Save locally
+    inventory.push(med);
+    localStorage.setItem("inventory", JSON.stringify(inventory));
+    loadInventory();
+    updateMRP();
+
+    // Save to Firestore
+    await addDoc(collection(db, "inventory"), med);
+
+    alert("Medicine added and saved to Firestore!");
+  } catch (e) {
+    console.error("Error adding medicine to Firestore:", e);
+    alert("Failed to save medicine to Firestore. Check console.");
+  }
 }
 
 // Auto-calculate total MRP from medicines in prescription
