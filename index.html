@@ -181,7 +181,8 @@ button.action:hover{
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp } 
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyBdwITU8DS8u9cMEabaoLRAwqmS1P8AegA",
     authDomain: "prescription-drjmd.firebaseapp.com",
@@ -502,15 +503,23 @@ function addMedicine(){
 }
 
 // Auto-calculate total MRP from medicines in prescription
-function updateMRP(){
+function updateMRP() {
   let rxLines = document.getElementById("rx").value.split("\n");
-  let totalMRP=0;
-  rxLines.forEach(line=>{
-    let medName=line.split(" ")[0]; // crude matching, assumes first word = medicine
-    let med = inventory.find(m=>m.name.toLowerCase()===medName.toLowerCase());
-    if(med) totalMRP += parseFloat(med.mrp)||0;
+  let totalMRP = 0;
+  let countedMeds = new Set(); // to avoid duplicates
+
+  rxLines.forEach(line => {
+    line = line.toLowerCase().trim();
+    inventory.forEach(med => {
+      let medName = med.name.toLowerCase().trim();
+      if(line.includes(medName) && !countedMeds.has(medName)) {
+        totalMRP += parseFloat(med.mrp) || 0;
+        countedMeds.add(medName);
+      }
+    });
   });
-  document.getElementById("mrp").value=totalMRP;
+
+  document.getElementById("mrp").value = totalMRP;
 }
 
 // Print
@@ -569,7 +578,7 @@ function printRx() {
   };
 
   // Save to Firestore
-  savePrescription(data);
+  savePrescription();
 
   // Open print window
   let w = window.open();
