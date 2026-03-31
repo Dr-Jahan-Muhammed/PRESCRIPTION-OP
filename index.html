@@ -121,10 +121,9 @@ button.action:hover{
 
 <h3>History</h3>
 <div id="historyList"></div>
-<textarea id="extraHistory" placeholder="Add extra history if needed..." rows="3"></textarea>
 
-<h3>Examination</h3>
-<input id="bp" placeholder="BP">
+<h3>Extra History</h3>
+<textarea id="extraHistory" rows="3" placeholder="Add extra history here" onkeyup="applyTemplates()"></textarea><input id="bp" placeholder="BP">
 <input id="pr" placeholder="Pulse">
 <input id="temp" placeholder="Temperature">
 <textarea id="exam" rows="3"></textarea>
@@ -174,10 +173,144 @@ button.action:hover{
 
 <script>
 // Load templates
-let templates = JSON.parse(localStorage.getItem("templates")) || {
-  UTI:{history:["Burning micturition","Frequency of urination","Urgency","No flank pain"],rx:["Cefixime 200 mg BD x5 days","Paracetamol SOS"]},
-  Sinusitis:{history:["Nasal congestion","Headache","Post-nasal drip"],rx:["Amoxicillin 500 mg BD x5 days","Paracetamol SOS"]}
+// 1️⃣ Define default templates in code
+const defaultTemplates = {
+  UTI: {
+    history: ["Burning micturition","Frequency of urination","Urgency","No flank pain"],
+    rx: ["T.Cefixime 200mg BD x5 days","T.Paracetamol 650mg SOS"]
+  },
+
+  Sinusitis: {
+    history: ["Nasal congestion","Headache","Post-nasal drip"],
+    rx: ["T.Amoxicillin 500mg BD x5 days","T.Paracetamol 650mg SOS"]
+  },
+
+  GERD:{
+    history:["Burning epigastric pain","Acid reflux","Post-meal discomfort"],
+    rx:["T.Pantoprazole 40mg OD before food","Syp.Antacid 10ml TDS"]
+  },
+
+  ViralFever:{
+    history:["Fever","Body ache","Weakness"],
+    rx:["T.Paracetamol 650mg SOS","ORS oral hydration"]
+  },
+
+  URTI:{
+    history:["Fever","Cough","Runny nose","Sore throat"],
+    rx:["T.Azithromycin 500mg OD x3 days","T.Paracetamol 650mg SOS","T.Levocetirizine 5mg HS"]
+  },
+
+  AGE:{
+    history:["Loose stools","Vomiting","Abdominal cramps"],
+    rx:["ORS oral hydration","Cap.Racecadotril 100mg BD","T.Ondansetron 4mg SOS"]
+  },
+
+  Migraine:{
+    history:["Unilateral headache","Photophobia","Nausea"],
+    rx:["T.Sumatriptan 50mg SOS","T.Paracetamol 650mg SOS"]
+  },
+
+  TensionHeadache:{
+    history:["Band-like headache","Stress","Neck stiffness"],
+    rx:["T.Paracetamol 650mg SOS","T.Thiocolchicoside HS"]
+  },
+
+  AllergicRhinitis:{
+    history:["Sneezing","Runny nose","Nasal itching"],
+    rx:["T.Levocetirizine 5mg HS","T.Montelukast 10mg HS"]
+  },
+
+  Tonsillitis:{
+    history:["Sore throat","Painful swallowing","Fever"],
+    rx:["T.Amoxicillin 500mg BD","T.Paracetamol 650mg SOS"]
+  },
+
+  Pharyngitis:{
+    history:["Throat pain","Difficulty swallowing","Fever"],
+    rx:["T.Azithromycin 500mg OD x3 days","Warm saline gargle"]
+  },
+
+  OtitisMedia:{
+    history:["Ear pain","Reduced hearing","Fever"],
+    rx:["T.Amoxicillin 500mg BD","T.Paracetamol 650mg SOS"]
+  },
+
+  Conjunctivitis:{
+    history:["Red eye","Watering","Sticky discharge"],
+    rx:["Moxifloxacin eye drops TDS","Cold compress"]
+  },
+
+  Bronchitis:{
+    history:["Cough","Sputum","Mild fever"],
+    rx:["T.Azithromycin 500mg OD","Syp.Cough syrup 10ml TDS"]
+  },
+
+  Asthma:{
+    history:["Wheezing","Breathlessness","Night cough"],
+    rx:["Inh.Salbutamol inhaler SOS","T.Montelukast 10mg HS"]
+  },
+
+  LowBackPain:{
+    history:["Lower back pain","Movement restriction"],
+    rx:["T.Aceclofenac 100mg BD","T.Thiocolchicoside HS"]
+  },
+
+  CervicalSpondylosis:{
+    history:["Neck pain","Radiating arm pain","Stiffness"],
+    rx:["T.Aceclofenac BD","T.Thiocolchicoside HS"]
+  },
+
+  KneePain:{
+    history:["Knee pain","Difficulty walking"],
+    rx:["T.Aceclofenac BD","Topical NSAID gel local application"]
+  },
+
+  Constipation:{
+    history:["Hard stools","Straining","Incomplete evacuation"],
+    rx:["Syp.Lactulose 15ml HS"]
+  },
+
+  Gastritis:{
+    history:["Epigastric pain","Nausea","Vomiting"],
+    rx:["T.Pantoprazole 40mg OD","T.Domperidone BD"]
+  },
+
+  SkinAllergy:{
+    history:["Itching","Red rash","Allergen exposure"],
+    rx:["T.Levocetirizine 5mg HS","Topical steroid cream local application"]
+  },
+
+  FungalInfection:{
+    history:["Itching","Circular rash","Scaling"],
+    rx:["Clotrimazole cream local application","T.Fluconazole weekly"]
+  },
+
+  Cellulitis:{
+    history:["Red swelling","Pain","Fever"],
+    rx:["T.Amoxicillin Clavulanate 625mg BD"]
+  },
+
+  GasBloating:{
+    history:["Abdominal fullness","Burping","Discomfort"],
+    rx:["T.Pantoprazole 40mg OD","Syp.Simethicone 10ml TDS"]
+  },
+
+  Anemia:{
+    history:["Fatigue","Pallor","Breathlessness"],
+    rx:["T.Iron Folic Acid OD"]
+  }
+
 };
+
+
+// 2️⃣ Get stored templates if any
+let storedTemplates = JSON.parse(localStorage.getItem("templates")) || {};
+
+// 3️⃣ Merge them: stored templates overwrite defaults if same key
+let templates = {...defaultTemplates, ...storedTemplates};
+
+// 4️⃣ Save merged version back to localStorage
+localStorage.setItem("templates", JSON.stringify(templates));
 
 // Load inventory
 let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
@@ -197,23 +330,33 @@ function loadTemplates(){
 function renderHistory(historyItems){
   let container = document.getElementById("historyList");
   container.innerHTML="";
+
   historyItems.forEach(item=>{
+
     let label = document.createElement("label");
+    label.style.display = "block";   // makes each item appear on new line
+
     let checkbox = document.createElement("input");
     checkbox.type="checkbox";
     checkbox.value=item;
     checkbox.checked=true;
+
     label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(item));
+    label.appendChild(document.createTextNode(" " + item)); // adds space
+
     container.appendChild(label);
+
   });
 }
 
 // Apply multiple selected templates
 function applyTemplates(){
+
   let selected = Array.from(document.getElementById("template").selectedOptions).map(o=>o.value);
+
   let combinedHistory = [];
   let combinedRx = [];
+
   selected.forEach(t=>{
     templates[t].history.forEach(h=>{
       if(!combinedHistory.includes(h)) combinedHistory.push(h);
@@ -222,8 +365,22 @@ function applyTemplates(){
       if(!combinedRx.includes(r)) combinedRx.push(r);
     });
   });
+
+  // ⭐ ADD THIS PART
+  let extra = document.getElementById("extraHistory").value
+      .split("\n")
+      .map(x=>x.trim())
+      .filter(x=>x!="");
+
+  extra.forEach(h=>{
+      if(!combinedHistory.includes(h)) combinedHistory.push(h);
+  });
+  // ⭐ END ADD
+
   renderHistory(combinedHistory);
+
   document.getElementById("rx").value = combinedRx.join("\n");
+
   updateMRP();
 }
 
