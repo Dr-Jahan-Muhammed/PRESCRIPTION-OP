@@ -176,6 +176,7 @@ button.action:hover{
 </div>
 
 </div>
+<button class="action" onclick="savePrescription()">Save Prescription</button>
 <button id="printBtn" onclick="printRx()">Print Prescription</button>
 <script type="module">
 
@@ -202,7 +203,7 @@ const db = getFirestore(app);
 window.db = db;
 window.addDoc = addDoc;
 window.collection = collection;
-
+window.serverTimestamp = serverTimestamp;
 </script>
 <script>
 
@@ -523,7 +524,7 @@ function updateMRP() {
 }
 
 // Print
-function printRx() {
+async function printRx() {
   // Get checked history items as array
   let checkedHistoryArr = Array.from(document.querySelectorAll("#historyList input:checked"))
                                .map(cb => cb.value);
@@ -578,7 +579,7 @@ function printRx() {
   };
 
   // Save to Firestore
-  savePrescription();
+  await savePrescription(); //
 
   // Open print window
   let w = window.open();
