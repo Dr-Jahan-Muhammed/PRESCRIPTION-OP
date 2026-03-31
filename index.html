@@ -515,18 +515,20 @@ function updateMRP(){
 
 // Print
 function printRx() {
-  // Get checked history items
-  let checkedHistory = Array.from(document.querySelectorAll("#historyList input:checked"))
-                             .map(cb => cb.value)
-                             .join("\n");
+  // Get checked history items as array
+  let checkedHistoryArr = Array.from(document.querySelectorAll("#historyList input:checked"))
+                               .map(cb => cb.value);
+
+  // Build history string for printing
+  let checkedHistoryStr = checkedHistoryArr.join("\n");
 
   // Start building the print text
   let text = "Name: " + document.getElementById("name").value +
              "\nAge: " + document.getElementById("age").value +
              "\nGender: " + document.getElementById("gender").value +
-             "\n\nHistory\n" + checkedHistory;
+             "\n\nHistory\n" + checkedHistoryStr;
 
-  // Only add BP/PR/Temp if they have values
+  // Only add BP/PR/Temp/Exam if they have values
   let bp = document.getElementById("bp").value.trim();
   let pr = document.getElementById("pr").value.trim();
   let temp = document.getElementById("temp").value.trim();
@@ -541,28 +543,37 @@ function printRx() {
   }
 
   // Prescription
-  let rx = document.getElementById("rx").value;
-  if(rx) text += "\n\nPrescription\n" + rx;
+  let rxArr = document.getElementById("rx").value.split("\n")
+                  .map(l=>l.trim())
+                  .filter(l=>l!=="");
+  if(rxArr.length) text += "\n\nPrescription\n" + rxArr.join("\n");
 
-  // Always add code + MRP
+  // Always add CODE + MRP
   text += "\n\nCODE + MRP";
-  let data = {
-  name: document.getElementById("name").value,
-  age: document.getElementById("age").value,
-  gender: document.getElementById("gender").value,
-  history: checkedHistory,
-  bp: bp,
-  pulse: pr,
-  temp: temp,
-  exam: exam,
-  prescription: rx,
-  time: new Date()
-};
 
-savePrescription(data);
+  // Prepare data object for Firestore
+  let data = {
+    name: document.getElementById("name").value,
+    age: document.getElementById("age").value,
+    gender: document.getElementById("gender").value,
+    history: checkedHistoryArr,      // array
+    extraHistory: document.getElementById("extraHistory").value,
+    exam: {
+      bp: bp,
+      pulse: pr,
+      temp: temp,
+      notes: exam
+    },
+    rx: rxArr,                        // array
+    totalMRP: parseFloat(document.getElementById("mrp").value) || 0
+  };
+
+  // Save to Firestore
+  savePrescription(data);
+
   // Open print window
   let w = window.open();
-  w.document.write("<pre>" + text + "</pre>");
+  w.document.write(`<pre style="font-family:Arial; font-size:14px;">${text}</pre>`);
   w.print();
 }
 
