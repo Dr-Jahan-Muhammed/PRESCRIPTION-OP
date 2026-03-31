@@ -2,91 +2,98 @@
 <html>
 <head>
 <title>Clinic OPD System</title>
-
 <style>
-
 body{
-font-family:Arial;
-margin:0;
-background:linear-gradient(120deg,#89f7fe,#66a6ff);
+  font-family:Arial;
+  margin:0;
+  background:linear-gradient(120deg,#89f7fe,#66a6ff);
 }
-
 header{
-background:#2c3e50;
-color:white;
-padding:15px;
-text-align:center;
-font-size:22px;
+  background:#2c3e50;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-size:22px;
 }
-
 nav{
-background:#34495e;
-padding:10px;
-display:flex;
-gap:10px;
-position:sticky;
-top:0;
+  background:#34495e;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  position:sticky;
+  top:0;
 }
-
 nav button{
-background:#1abc9c;
-border:none;
-padding:10px 14px;
-color:white;
-border-radius:6px;
-cursor:pointer;
+  background:#1abc9c;
+  border:none;
+  padding:10px 14px;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
 }
-
 nav button:hover{
-background:#16a085;
+  background:#16a085;
 }
-
 .container{
-padding:20px;
+  padding:20px;
 }
-
 .section{
-background:white;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  background:white;
+  padding:20px;
+  margin-bottom:20px;
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
 }
-
 input,select,textarea{
-width:100%;
-padding:8px;
-margin-top:6px;
-margin-bottom:12px;
-border-radius:6px;
-border:1px solid #ccc;
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+  margin-bottom:12px;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
-
 button.action{
-background:#3498db;
-color:white;
-border:none;
-padding:10px 14px;
-border-radius:6px;
-cursor:pointer;
+  background:#3498db;
+  color:white;
+  border:none;
+  padding:10px 14px;
+  border-radius:6px;
+  cursor:pointer;
 }
-
 button.action:hover{
-background:#2980b9;
+  background:#2980b9;
 }
-
 .hidden{
-display:none;
+  display:none;
 }
-
 .inventory-item{
-border-bottom:1px solid #ddd;
-padding:6px;
+  border-bottom:1px solid #ddd;
+  padding:6px;
 }
-
+#printBtn {
+  display:block;
+  margin:20px auto;
+  padding:12px 30px;
+  background:#28a745;
+  color:white;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+  cursor:pointer;
+}
+#printBtn:hover{
+  background:#218838;
+}
+/* History checkbox styling */
+#historyList label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+  font-size:15px;
+}
 </style>
 </head>
-
 <body>
 
 <header>Clinic OPD Management</header>
@@ -101,21 +108,20 @@ padding:6px;
 <div class="container">
 
 <div id="prescription" class="section">
-
 <h3>Patient Details</h3>
-
 <input id="name" placeholder="Name">
 <input id="age" placeholder="Age">
 <select id="gender">
-<option>Male</option>
-<option>Female</option>
+  <option>Male</option>
+  <option>Female</option>
 </select>
 
-<label>Template</label>
-<select id="template" onchange="applyTemplate()"></select>
+<label>Templates (Ctrl+Click for multiple)</label>
+<select id="template" multiple size="4" onchange="applyTemplates()"></select>
 
 <h3>History</h3>
-<textarea id="history" rows="5"></textarea>
+<div id="historyList"></div>
+<textarea id="extraHistory" placeholder="Add extra history if needed..." rows="3"></textarea>
 
 <h3>Examination</h3>
 <input id="bp" placeholder="BP">
@@ -126,49 +132,31 @@ padding:6px;
 <h3>Prescription</h3>
 <textarea id="rx" rows="6"></textarea>
 
-<button class="action" onclick="printRx()">Print</button>
-
 </div>
 
 <div id="billing" class="section">
-
 <h3>Billing</h3>
-
 <input id="cf" placeholder="Consultation Fee">
-<input id="mrp" placeholder="Medicine MRP">
-
+<input id="mrp" placeholder="Total MRP (Doctor only)">
 <button class="action" onclick="calculate()">Calculate</button>
-
-<input id="total" placeholder="Total">
-
+<input id="total" placeholder="Total Amount">
 </div>
 
 <div id="review" class="section">
-
 <h3>Review Queue</h3>
-
 <button class="action" onclick="addReview()">Add Review</button>
-
 <ul id="reviewList"></ul>
-
 </div>
 
 <div id="adminPanel" class="section hidden">
-
 <h3>Authorized Panel</h3>
-
 <h3>Add Template</h3>
-
 <input id="tempName" placeholder="Template Name">
-
-<textarea id="tempHistory" placeholder="History Template"></textarea>
-
-<textarea id="tempRx" placeholder="Prescription Template"></textarea>
-
+<textarea id="tempHistory" placeholder="History Template (comma separated)"></textarea>
+<textarea id="tempRx" placeholder="Prescription Template (comma separated)"></textarea>
 <button class="action" onclick="addTemplate()">Add Template</button>
 
 <h3>Inventory</h3>
-
 <input id="medName" placeholder="Medicine Name">
 <input id="batch" placeholder="Batch">
 <input id="exp" placeholder="Expiry">
@@ -177,175 +165,191 @@ padding:6px;
 <input id="sell" placeholder="Selling Rate">
 <input id="mrpInv" placeholder="MRP">
 <input id="stock" placeholder="Stock">
-
 <button class="action" onclick="addMedicine()">Add Medicine</button>
-
 <div id="inventoryList"></div>
-
 </div>
 
 </div>
+<button id="printBtn" onclick="printRx()">Print Prescription</button>
 
 <script>
+// Load templates
+let templates = JSON.parse(localStorage.getItem("templates")) || {
+  UTI:{history:["Burning micturition","Frequency of urination","Urgency","No flank pain"],rx:["Cefixime 200 mg BD x5 days","Paracetamol SOS"]},
+  Sinusitis:{history:["Nasal congestion","Headache","Post-nasal drip"],rx:["Amoxicillin 500 mg BD x5 days","Paracetamol SOS"]}
+};
 
-let templates=JSON.parse(localStorage.getItem("templates"))||{
-
-UTI:{
-history:"Burning micturition\nFrequency of urination\nUrgency\nNo flank pain",
-rx:"Tab Cefixime 200 mg BD x5 days\nTab Paracetamol SOS"
-},
-
-URTI:{
-history:"Fever\nCough\nRunning nose\nSore throat",
-rx:"Tab Azithromycin 500 OD x3 days\nParacetamol SOS"
-}
-
-}
+// Load inventory
+let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
 
 function loadTemplates(){
-
-let select=document.getElementById("template")
-
-select.innerHTML="<option value=''>Select Template</option>"
-
-for(let key in templates){
-
-let opt=document.createElement("option")
-
-opt.value=key
-opt.innerText=key
-
-select.appendChild(opt)
-
+  let select = document.getElementById("template");
+  select.innerHTML="";
+  for(let key in templates){
+    let opt = document.createElement("option");
+    opt.value = key;
+    opt.innerText = key;
+    select.appendChild(opt);
+  }
 }
 
+// Render combined history with checkboxes
+function renderHistory(historyItems){
+  let container = document.getElementById("historyList");
+  container.innerHTML="";
+  historyItems.forEach(item=>{
+    let label = document.createElement("label");
+    let checkbox = document.createElement("input");
+    checkbox.type="checkbox";
+    checkbox.value=item;
+    checkbox.checked=true;
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(item));
+    container.appendChild(label);
+  });
 }
 
-function applyTemplate(){
-
-let t=document.getElementById("template").value
-
-if(!t)return
-
-document.getElementById("history").value=templates[t].history
-document.getElementById("rx").value=templates[t].rx
-
+// Apply multiple selected templates
+function applyTemplates(){
+  let selected = Array.from(document.getElementById("template").selectedOptions).map(o=>o.value);
+  let combinedHistory = [];
+  let combinedRx = [];
+  selected.forEach(t=>{
+    templates[t].history.forEach(h=>{
+      if(!combinedHistory.includes(h)) combinedHistory.push(h);
+    });
+    templates[t].rx.forEach(r=>{
+      if(!combinedRx.includes(r)) combinedRx.push(r);
+    });
+  });
+  renderHistory(combinedHistory);
+  document.getElementById("rx").value = combinedRx.join("\n");
+  updateMRP();
 }
 
+// Add new template
 function addTemplate(){
-
-let name=document.getElementById("tempName").value
-
-templates[name]={
-
-history:document.getElementById("tempHistory").value,
-rx:document.getElementById("tempRx").value
-
+  let name=document.getElementById("tempName").value;
+  let hist = document.getElementById("tempHistory").value.split(",").map(s=>s.trim()).filter(s=>s);
+  let rx = document.getElementById("tempRx").value.split(",").map(s=>s.trim()).filter(s=>s);
+  templates[name]={history:hist,rx:rx};
+  localStorage.setItem("templates",JSON.stringify(templates));
+  loadTemplates();
+  alert("Template added!");
 }
 
-localStorage.setItem("templates",JSON.stringify(templates))
-
-loadTemplates()
-
-alert("Template Added")
-
+// Inventory
+function loadInventory(){
+  let list = document.getElementById("inventoryList");
+  list.innerHTML="";
+  inventory.forEach(med=>{
+    let div = document.createElement("div");
+    div.className="inventory-item";
+    div.innerText =
+      med.name+" | Batch:"+med.batch+" | Exp:"+med.exp+
+      " | HSN:"+med.hsn+" | Purchase:"+med.purchase+
+      " | Sell:"+med.sell+" | MRP:"+med.mrp+" | Stock:"+med.stock;
+    list.appendChild(div);
+  });
 }
 
-function scrollToSection(id){
-
-document.getElementById(id).scrollIntoView({behavior:"smooth"})
-
-}
-
-function calculate(){
-
-let cf=parseFloat(document.getElementById("cf").value)||0
-let mrp=parseFloat(document.getElementById("mrp").value)||0
-
-document.getElementById("total").value=cf+mrp
-
-}
-
-function printRx(){
-
-let text=
-
-"Name:"+name.value+
-"\nAge:"+age.value+
-"\nGender:"+gender.value+
-
-"\n\nHistory\n"+history.value+
-
-"\n\nExamination\nBP:"+bp.value+" Pulse:"+pr.value+" Temp:"+temp.value+"\n"+exam.value+
-
-"\n\nPrescription\n"+rx.value+
-
-"\n\nFee + MRP"
-
-let w=window.open()
-
-w.document.write("<pre>"+text+"</pre>")
-
-w.print()
-
-}
-
-function addReview(){
-
-let li=document.createElement("li")
-
-li.innerText=name.value
-
-document.getElementById("reviewList").appendChild(li)
-
-}
-
-function openAdmin(){
-
-let p=prompt("Enter Password")
-
-if(p=="1234"){
-
-document.getElementById("adminPanel").classList.remove("hidden")
-
-}
-
-}
-
-let inventory=[]
-
+// Add medicine
 function addMedicine(){
-
-let med={
-
-name:medName.value,
-batch:batch.value,
-exp:exp.value,
-hsn:hsn.value,
-purchase:purchase.value,
-sell:sell.value,
-mrp:mrpInv.value,
-stock:stock.value
-
+  let med={
+    name:medName.value,
+    batch:batch.value,
+    exp:exp.value,
+    hsn:hsn.value,
+    purchase:purchase.value,
+    sell:sell.value,
+    mrp:mrpInv.value,
+    stock:stock.value
+  };
+  inventory.push(med);
+  localStorage.setItem("inventory",JSON.stringify(inventory));
+  loadInventory();
+  updateMRP();
 }
 
-inventory.push(med)
-
-let div=document.createElement("div")
-
-div.className="inventory-item"
-
-div.innerText=
-
-med.name+" | Batch:"+med.batch+" | Exp:"+med.exp+" | HSN:"+med.hsn+" | MRP:"+med.mrp+" | Stock:"+med.stock
-
-document.getElementById("inventoryList").appendChild(div)
-
+// Auto-calculate total MRP from medicines in prescription
+function updateMRP(){
+  let rxLines = document.getElementById("rx").value.split("\n");
+  let totalMRP=0;
+  rxLines.forEach(line=>{
+    let medName=line.split(" ")[0]; // crude matching, assumes first word = medicine
+    let med = inventory.find(m=>m.name.toLowerCase()===medName.toLowerCase());
+    if(med) totalMRP += parseFloat(med.mrp)||0;
+  });
+  document.getElementById("mrp").value=totalMRP;
 }
 
-loadTemplates()
+// Print
+function printRx() {
+  // Get checked history items
+  let checkedHistory = Array.from(document.querySelectorAll("#historyList input:checked"))
+                             .map(cb => cb.value)
+                             .join("\n");
+
+  // Start building the print text
+  let text = "Name: " + document.getElementById("name").value +
+             "\nAge: " + document.getElementById("age").value +
+             "\nGender: " + document.getElementById("gender").value +
+             "\n\nHistory\n" + checkedHistory;
+
+  // Only add BP/PR/Temp if they have values
+  let bp = document.getElementById("bp").value.trim();
+  let pr = document.getElementById("pr").value.trim();
+  let temp = document.getElementById("temp").value.trim();
+  let exam = document.getElementById("exam").value.trim();
+
+  if (bp || pr || temp || exam) {
+    text += "\n\nExamination";
+    if(bp) text += "\nBP: " + bp;
+    if(pr) text += " Pulse: " + pr;
+    if(temp) text += " Temp: " + temp;
+    if(exam) text += "\n" + exam;
+  }
+
+  // Prescription
+  let rx = document.getElementById("rx").value;
+  if(rx) text += "\n\nPrescription\n" + rx;
+
+  // Always add code + MRP
+  text += "\n\nCODE + MRP";
+
+  // Open print window
+  let w = window.open();
+  w.document.write("<pre>" + text + "</pre>");
+  w.print();
+}
+
+// Billing
+function calculate(){
+  let cf=parseFloat(document.getElementById("cf").value)||0;
+  let mrp=parseFloat(document.getElementById("mrp").value)||0;
+  document.getElementById("total").value = cf + mrp;
+}
+
+// Review
+function addReview(){
+  let li=document.createElement("li");
+  li.innerText=document.getElementById("name").value;
+  document.getElementById("reviewList").appendChild(li);
+}
+
+// Scroll
+function scrollToSection(id){document.getElementById(id).scrollIntoView({behavior:"smooth"});}
+
+// Admin
+function openAdmin(){
+  let p = prompt("Enter Password");
+  if(p=="1234"){document.getElementById("adminPanel").classList.remove("hidden");}
+}
+
+// Initialize
+loadTemplates();
+loadInventory();
 
 </script>
-
 </body>
 </html>
