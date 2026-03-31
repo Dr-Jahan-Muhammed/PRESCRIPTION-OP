@@ -109,11 +109,14 @@ button.action:hover{
 
 <div id="prescription" class="section">
 <h3>Patient Details</h3>
+
 <input id="name" placeholder="Name">
-<input id="age" placeholder="Age">
+
+<input type="number" id="age" placeholder="Age" oninput="checkPediatric()">
+
 <select id="gender">
-  <option>Male</option>
-  <option>Female</option>
+<option>Male</option>
+<option>Female</option>
 </select>
 
 <label>Templates (Ctrl+Click for multiple)</label>
@@ -129,8 +132,12 @@ button.action:hover{
 <textarea id="exam" rows="3"></textarea>
 
 <h3>Prescription</h3>
-<textarea id="rx" rows="6"></textarea>
 
+<div id="pediatricWarning" style="display:none;color:red;font-weight:bold;">
+⚠ Pediatric patient – adjust dosage (mg/kg)
+</div>
+
+<textarea id="rx" rows="6"></textarea>
 </div>
 
 <div id="billing" class="section">
@@ -170,9 +177,50 @@ button.action:hover{
 
 </div>
 <button id="printBtn" onclick="printRx()">Print Prescription</button>
+<script type="module">
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyBdwITU8DS8u9cMEabaoLRAwqmS1P8AegA",
+    authDomain: "prescription-drjmd.firebaseapp.com",
+    projectId: "prescription-drjmd",
+    storageBucket: "prescription-drjmd.firebasestorage.app",
+    messagingSenderId: "530828278027",
+    appId: "1:530828278027:web:b2c437c98eedb4c23d0a0e",
+    measurementId: "G-17GNP2MHQV"
+  };
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+const db = getFirestore(app);
+
+/* make Firebase usable in your main script */
+window.db = db;
+window.addDoc = addDoc;
+window.collection = collection;
+
+</script>
 <script>
-// Load templates
+
+/* Firebase save function */
+async function savePrescription(){
+
+  let name = document.getElementById("name").value;
+  let age = document.getElementById("age").value;
+  let rx = document.getElementById("rx").value;
+
+  await window.addDoc(window.collection(window.db,"prescriptions"),{
+    name:name,
+    age:age,
+    prescription:rx,
+    time:new Date()
+  });
+
+}
+  // Load templates
 // 1️⃣ Define default templates in code
 const defaultTemplates = {
   UTI: {
@@ -349,7 +397,19 @@ function renderHistory(historyItems){
   });
 }
 
-// Apply multiple selected templates
+function checkPediatric(){
+
+  let ageInput = document.getElementById("age").value;
+  let warning = document.getElementById("pediatricWarning");
+
+  if(ageInput !== "" && Number(ageInput) < 14){
+      warning.style.display = "block";
+  }else{
+      warning.style.display = "none";
+  }
+
+}
+  // Apply multiple selected templates
 function applyTemplates(){
 
   let selected = Array.from(document.getElementById("template").selectedOptions).map(o=>o.value);
@@ -473,7 +533,20 @@ function printRx() {
 
   // Always add code + MRP
   text += "\n\nCODE + MRP";
+  let data = {
+  name: document.getElementById("name").value,
+  age: document.getElementById("age").value,
+  gender: document.getElementById("gender").value,
+  history: checkedHistory,
+  bp: bp,
+  pulse: pr,
+  temp: temp,
+  exam: exam,
+  prescription: rx,
+  time: new Date()
+};
 
+savePrescription(data);
   // Open print window
   let w = window.open();
   w.document.write("<pre>" + text + "</pre>");
