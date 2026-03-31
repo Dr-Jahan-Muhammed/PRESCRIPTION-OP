@@ -206,19 +206,32 @@ window.collection = collection;
 <script>
 
 /* Firebase save function */
-async function savePrescription(){
+async function savePrescription() {
+  try {
+    const checkedHistory = Array.from(document.querySelectorAll("#historyList input:checked"))
+                                .map(cb => cb.value);
 
-  let name = document.getElementById("name").value;
-  let age = document.getElementById("age").value;
-  let rx = document.getElementById("rx").value;
+    await addDoc(collection(db, "prescriptions"), {
+      name: document.getElementById("name").value,
+      age: document.getElementById("age").value,
+      gender: document.getElementById("gender").value,
+      history: checkedHistory,           // Array of history
+      extraHistory: document.getElementById("extraHistory").value,
+      exam: {
+        bp: document.getElementById("bp").value,
+        pr: document.getElementById("pr").value,
+        temp: document.getElementById("temp").value,
+        notes: document.getElementById("exam").value
+      },
+      rx: document.getElementById("rx").value.split("\n"), // Array of meds
+      totalMRP: parseFloat(document.getElementById("mrp").value) || 0,
+      timestamp: serverTimestamp() // auto date/time
+    });
 
-  await window.addDoc(window.collection(window.db,"prescriptions"),{
-    name:name,
-    age:age,
-    prescription:rx,
-    time:new Date()
-  });
-
+    console.log("Prescription saved to Firestore!");
+  } catch (e) {
+    console.error("Error adding prescription: ", e);
+  }
 }
   // Load templates
 // 1️⃣ Define default templates in code
