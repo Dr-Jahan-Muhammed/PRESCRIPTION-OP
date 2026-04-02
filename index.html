@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinic ERP - Master Edition v10.0</title>
+    <title>Clinic ERP - Master Fixed v11.0</title>
     <style>
         :root {
             --primary: #2c3e50; --secondary: #1abc9c; --accent: #3498db;
@@ -27,14 +27,13 @@
             nav, header, button, .no-print, #adminPanel, .section:not(#prescription), #templateSelector { display: none !important; }
             body { background: white; margin: 0; padding: 0; }
             #prescription { display: block !important; padding: 0; margin-top: 100px; }
-            pre { white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; font-size: 17px; border:none; }
         }
         .inventory-item { border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
-<header class="no-print">CLINIC MASTER ERP v10.0</header>
+<header class="no-print">CLINIC MASTER ERP v11.0</header>
 
 <nav class="no-print">
     <button onclick="scrollToSection('prescription')">New Prescription</button>
@@ -91,7 +90,7 @@
     </div>
 
     <div id="billing" class="section no-print">
-        <h3>Billing & Secret Code</h3>
+        <h3>Billing</h3>
         <div class="grid-3">
             <div><label>Consult Fee</label><input id="cf" type="number" value="0" oninput="updateMRP()"></div>
             <div><label>Medicine MRP</label><input id="mrp" type="number" value="0" readonly></div>
@@ -150,7 +149,7 @@
 
     let inventory = [], templates = [], logs = [], activeLogId = null, editingInvId = null;
 
-    // --- BINDING FUNCTIONS TO WINDOW ---
+    // --- RE-LINKING BUTTONS ---
     window.scrollToSection = (id) => document.getElementById(id).scrollIntoView({behavior:"smooth"});
     window.openAdmin = () => { if(prompt("Auth?") === "1234") document.getElementById("adminPanel").classList.toggle("hidden"); };
     window.showTab = (id) => { ["invTab", "tempTab", "logTab"].forEach(t => document.getElementById(t).classList.add("hidden")); document.getElementById(id).classList.remove("hidden"); };
@@ -190,34 +189,43 @@
     };
 
     window.processPrint = async () => {
+        // GET LIVE DATA FROM SCREEN
         const name = document.getElementById("name").value;
-        if(!name) return alert("Name?");
-        
+        const age = document.getElementById("age").value;
+        const gender = document.getElementById("gender").value;
         const bp = document.getElementById("bp").value.trim();
         const pr = document.getElementById("pr").value.trim();
         const temp = document.getElementById("temp").value.trim();
-        const hist = Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value);
-        const tests = Array.from(document.querySelectorAll(".lab-test:checked")).map(i => i.value);
-        const code = document.getElementById("secretCodeDisp").value;
+        const extraHist = document.getElementById("extraHistory").value.trim();
+        const rx = document.getElementById("rx").value;
+        const cf = parseInt(document.getElementById("cf").value) || 0;
+        const mrpVal = parseFloat(document.getElementById("mrp").value) || 0;
+        const code = encodeFee(cf);
+        
+        if(!name) return alert("Patient Name is required!");
 
-        let vitalsStr = "";
-        if(bp) vitalsStr += `BP: ${bp} `;
-        if(pr) vitalsStr += `Pulse: ${pr} `;
-        if(temp) vitalsStr += `Temp: ${temp}`;
+        const selectedHistory = Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value);
+        const selectedTests = Array.from(document.querySelectorAll(".lab-test:checked")).map(i => i.value);
+
+        // Vitals Logic (Only show if not empty)
+        let vitalsHtml = "";
+        if(bp || pr || temp) {
+            vitalsHtml = `<p><strong>Vitals:</strong> ${bp ? 'BP:'+bp+' ' : ''} ${pr ? 'Pulse:'+pr+' ' : ''} ${temp ? 'Temp:'+temp : ''}</p>`;
+        }
 
         const data = {
-            name, age: document.getElementById("age").value, gender: document.getElementById("gender").value,
-            history: hist, rx: document.getElementById("rx").value, tests, bp, pr, temp,
-            mrp: parseFloat(document.getElementById("mrp").value), cf: parseInt(document.getElementById("cf").value),
-            forReview: document.getElementById("markForReview").checked, timestamp: serverTimestamp()
+            name, age, gender, history: selectedHistory, rx, extraHistory: extraHist,
+            bp, pr, temp, mrp: mrpVal, cf, tests: selectedTests,
+            timestamp: serverTimestamp()
         };
 
+        // SAVE DATA
         if(activeLogId) await updateDoc(doc(db, "prescriptions", activeLogId), data);
         else await addDoc(collection(db, "prescriptions"), data);
 
-        // Deduct Stock
-        const lines = data.rx.split("\n");
-        for (const line of lines) {
+        // STOCK DEDUCTION
+        const rxLines = rx.split("\n");
+        for (const line of rxLines) {
             for (const med of inventory) {
                 if (line.toUpperCase().includes(med.name.toUpperCase().trim())) {
                     const upLine = line.toUpperCase();
@@ -231,22 +239,34 @@
             }
         }
 
+        // GENERATE PRINT WINDOW
         const win = window.open('', '_blank');
-        win.document.write(`<html><body style="font-family:sans-serif; padding:20px;">
-            <div style="margin-top:100px;">
-                <p><strong>Name:</strong> ${name} &nbsp;&nbsp; <strong>Age/Sex:</strong> ${data.age}/${data.gender} 
-                <span style="float:right;">${new Date().toLocaleDateString()}</span></p>
-                <p><strong>History:</strong> ${hist.join(", ")} ${document.getElementById("extraHistory").value}</p>
-                ${vitalsStr ? `<p><strong>Vitals:</strong> ${vitalsStr}</p>` : ''}
-                <hr><p><strong>Rx:</strong></p>
-                <pre style="font-size:18px; min-height:280px;">${data.rx}</pre>
-                <p><strong>Investigations:</strong> ${tests.join(", ") || "None"}</p>
-                <div style="position:fixed; bottom:50px; width:100%; text-align:right;"><strong>CODE: ${code} + MRP</strong></div>
-            </div>
-        </body></html>`);
-        win.document.close(); win.print(); location.reload();
+        win.document.write(`
+            <html>
+            <head><style>body{font-family:sans-serif; padding:40px;} pre{white-space:pre-wrap; font-size:18px;}</style></head>
+            <body>
+                <div style="margin-top:100px;">
+                    <p><strong>Name:</strong> ${name} &nbsp;&nbsp; <strong>Age/Sex:</strong> ${age}/${gender} 
+                    <span style="float:right;">${new Date().toLocaleDateString()}</span></p>
+                    <p><strong>History:</strong> ${selectedHistory.join(", ")} ${extraHist}</p>
+                    ${vitalsHtml}
+                    <hr>
+                    <p><strong>Rx:</strong></p>
+                    <pre style="min-height:300px;">${rx}</pre>
+                    <p><strong>Investigations:</strong> ${selectedTests.join(", ") || "None"}</p>
+                    <div style="position:fixed; bottom:50px; width:100%; text-align:right; font-weight:bold;">
+                        <span>CODE: ${code} + MRP</span>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `);
+        win.document.close();
+        win.print();
+        location.reload();
     };
 
+    // --- REFRESH DATA ---
     async function syncData() {
         const invSnap = await getDocs(collection(db, "inventory"));
         inventory = [];
@@ -288,11 +308,11 @@
             t.rx.split("\n").forEach(r => { if(r && !rx.includes(r)) rx.push(r); });
         });
         document.getElementById("historyCheckboxList").innerHTML = Array.from(h).map(i => `<label><input type="checkbox" checked value="${i}"> ${i}</label>`).join("");
-        document.getElementById("rx").value = rx.join("\n"); updateMRP();
+        document.getElementById("rx").value = rx.join("\n"); window.updateMRP();
     };
 
     window.saveCurrentAsTemplate = async () => {
-        const name = prompt("Name?");
+        const name = prompt("Template Name?");
         if(name) await addDoc(collection(db, "templates"), { name, history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value), rx: document.getElementById("rx").value });
         syncData();
     };
