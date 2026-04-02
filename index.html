@@ -3,152 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinic Management Pro - Elite Edition</title>
+    <title>Clinic ERP - Master Edition v10.0</title>
     <style>
         :root {
             --primary: #2c3e50; --secondary: #1abc9c; --accent: #3498db;
             --danger: #e74c3c; --warning: #f39c12; --light: #f4f7f6; --white: #ffffff;
         }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--light); color: #333; }
-        
-        /* WOW Header & Nav */
-        header { background: var(--primary); color: white; padding: 25px; text-align: center; font-size: 28px; font-weight: 800; letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        nav { background: #34495e; padding: 12px; display: flex; gap: 15px; position: sticky; top: 0; z-index: 1000; justify-content: center; }
-        nav button { background: var(--secondary); border: none; padding: 10px 20px; color: white; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        nav button:hover { background: #16a085; transform: translateY(-2px); }
-
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 25px; }
-        .section { background: var(--white); padding: 30px; margin-bottom: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        
-        /* Modern Inputs */
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 10px; border-radius: 10px; border: 1px solid #dfe6e9; box-sizing: border-box; font-size: 15px; transition: border 0.3s; }
-        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
-        
-        /* Stat Cards */
-        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--white); padding: 20px; border-radius: 15px; text-align: center; border-bottom: 4px solid var(--accent); }
-        .stat-card span { font-size: 14px; color: #7f8c8d; text-transform: uppercase; }
-        .stat-card h2 { margin: 10px 0 0; color: var(--primary); font-size: 24px; }
-
-        /* Print Prescription Styles */
-        @media print {
-            nav, header, #printBtn, .action, .edit-btn, .del-btn, #adminPanel, #reviewQueue, #templateSelector, .no-print { display: none !important; }
-            body { background: white; }
-            .section { box-shadow: none; border: none; padding: 0; margin: 0; }
-            .container { width: 100%; max-width: 100%; margin: 0; }
-            .print-only { display: block !important; }
-        }
-        .print-header { display: none; text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-        
-        /* Components */
-        .badge { background: #fdf9f0; border-left: 4px solid var(--warning); padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .inventory-item { padding: 15px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; }
-        .inventory-item:last-child { border: none; }
-        #printBtn { display: block; margin: 40px auto; padding: 20px 100px; background: var(--secondary); color: white; border: none; border-radius: 12px; font-size: 22px; cursor: pointer; font-weight: 700; box-shadow: 0 10px 20px rgba(26, 188, 156, 0.3); transition: 0.3s; }
-        #printBtn:hover { transform: scale(1.05); background: #16a085; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--light); color: #333; }
+        header { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; }
+        nav { background: #34495e; padding: 10px; display: flex; gap: 10px; position: sticky; top: 0; z-index: 1000; justify-content: center; }
+        nav button { background: var(--secondary); border: none; padding: 8px 15px; color: white; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .section { background: var(--white); padding: 25px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        .action { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .hidden { display: none; }
+        .badge { background: #fff3cd; border-left: 5px solid #ffc107; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .check-group { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; background: #f9f9f9; padding: 15px; border-radius: 8px; }
+        .check-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
+        
+        @media print {
+            nav, header, button, .no-print, #adminPanel, .section:not(#prescription), #templateSelector { display: none !important; }
+            body { background: white; margin: 0; padding: 0; }
+            #prescription { display: block !important; padding: 0; margin-top: 100px; }
+            pre { white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; font-size: 17px; border:none; }
+        }
+        .inventory-item { border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
-<header>CLINIC PRO ERP</header>
+<header class="no-print">CLINIC MASTER ERP v10.0</header>
 
 <nav class="no-print">
-    <button onclick="scrollToSection('prescription')">Patient Entry</button>
+    <button onclick="scrollToSection('prescription')">New Prescription</button>
     <button onclick="scrollToSection('reviewQueue')">Review Queue</button>
-    <button onclick="openAdmin()">Admin Suite</button>
+    <button onclick="openAdmin()">Authorized Admin</button>
 </nav>
 
 <div class="container">
     <div id="alertsContainer" class="no-print"></div>
 
-    <div class="print-header print-only">
-        <h1>DR. JMD CLINIC & OPD</h1>
-        <p>Specialist Healthcare | Contact: +91 XXXX-XXXXXX</p>
-        <p>Date: <span id="printDate"></span></p>
-    </div>
-
     <div id="prescription" class="section">
         <h3 class="no-print">Patient Demographics</h3>
         <div class="grid-3">
-            <input id="name" placeholder="Full Patient Name">
+            <input id="name" placeholder="Patient Name">
             <input type="number" id="age" placeholder="Age" oninput="checkPediatric()">
             <select id="gender"><option>Male</option><option>Female</option></select>
         </div>
-        <div id="pediatricWarning" class="hidden badge">⚠ <strong>Pediatric Alert:</strong> Please verify mg/kg dosage for this patient.</div>
+        <div id="pediatricWarning" class="hidden badge">⚠ <strong>Pediatric Alert:</strong> Please verify mg/kg dosage.</div>
 
-        <h3 class="no-print">Diagnosis & Template</h3>
-        <select id="templateSelector" multiple onchange="applyMultiTemplates()" class="no-print"></select>
-        <div id="historyCheckboxList"></div>
-        <textarea id="extraHistory" rows="2" placeholder="Clinical Findings / Extra History..."></textarea>
-        
-        <div class="grid-3">
-            <input id="bp" placeholder="Blood Pressure (BP)">
-            <input id="pr" placeholder="Pulse Rate (PR)">
-            <input id="temp" placeholder="Temperature (°F)">
+        <div class="no-print">
+            <h3>History Template</h3>
+            <select id="templateSelector" multiple onchange="applyMultiTemplates()"></select>
+            <div id="historyCheckboxList" style="margin:10px 0;"></div>
+            <textarea id="extraHistory" rows="2" placeholder="Clinical Findings..."></textarea>
+        </div>
+
+        <div class="grid-3 no-print">
+            <input id="bp" placeholder="BP">
+            <input id="pr" placeholder="Pulse">
+            <input id="temp" placeholder="Temp">
         </div>
 
         <h3>Prescription (Rx)</h3>
-        <div style="display:flex; gap:10px;" class="no-print">
+        <div class="no-print" style="display:flex; gap:10px;">
             <input list="medList" id="rxInput" placeholder="Quick Search Stock...">
             <datalist id="medList"></datalist>
-            <button class="action" onclick="addManualRx()">Add</button>
+            <button class="action" onclick="addManualRx()">Add Med</button>
         </div>
-        <textarea id="rx" rows="10" placeholder="e.g., DICLOTWIST M 1 BD X 5 DAYS" onkeyup="updateMRP()"></textarea>
-        
-        <div class="badge no-print">
-            <label><input type="checkbox" id="markForReview"> <strong>Mark for Review Queue</strong> (Follow-up required)</label>
-            <button onclick="saveCurrentAsTemplate()" style="float:right; background:var(--accent); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">💾 Save as Template</button>
+        <textarea id="rx" rows="10" placeholder="Med Name 1 BD X 5 DAYS" onkeyup="updateMRP()"></textarea>
+
+        <h3>Investigations</h3>
+        <div class="check-group">
+            <label><input type="checkbox" class="lab-test" value="CBC"> CBC</label>
+            <label><input type="checkbox" class="lab-test" value="ESR"> ESR</label>
+            <label><input type="checkbox" class="lab-test" value="URINE R/E"> URINE R/E</label>
+            <label><input type="checkbox" class="lab-test" value="USG ABDOMEN"> USG ABDOMEN</label>
+            <label><input type="checkbox" class="lab-test" value="RBS"> RBS</label>
+        </div>
+
+        <div class="no-print" style="margin-top:15px; padding:10px; background:#f0f7ff; border-radius:8px;">
+            <label><input type="checkbox" id="markForReview"> Keep in Review List</label>
+            <button onclick="saveCurrentAsTemplate()" style="float:right; border:none; background:none; color:var(--accent); text-decoration:underline; cursor:pointer;">Save as Template</button>
         </div>
     </div>
 
     <div id="billing" class="section no-print">
-        <h3>Billing Summary</h3>
+        <h3>Billing & Secret Code</h3>
         <div class="grid-3">
-            <div><label>Consultation Fee</label><input id="cf" type="number" value="0" oninput="updateMRP()"></div>
-            <div><label>Pharmacy Total (MRP)</label><input id="mrp" type="number" value="0" readonly></div>
-            <div><label>Grand Total</label><input id="total" readonly style="font-size:20px; font-weight:800; background:#f1f2f6; color:var(--primary);"></div>
+            <div><label>Consult Fee</label><input id="cf" type="number" value="0" oninput="updateMRP()"></div>
+            <div><label>Medicine MRP</label><input id="mrp" type="number" value="0" readonly></div>
+            <div><label>Fee Code Only</label><input id="secretCodeDisp" readonly style="background:#eee; font-weight:bold;"></div>
         </div>
     </div>
 
-    <div id="reviewQueue" class="section no-print">
-        <h3>Review Queue</h3>
-        <div id="reviewListUI"></div>
-    </div>
+    <div id="reviewQueue" class="section no-print"><h3>Active Review Queue</h3><div id="reviewListUI"></div></div>
 
     <div id="adminPanel" class="section hidden no-print">
-        <h2 style="color:var(--danger)">Clinic Analytics & Admin</h2>
-        <div class="stat-grid">
-            <div class="stat-card"><span>Patients</span><h2 id="statPatients">0</h2></div>
-            <div class="stat-card"><span>Revenue</span><h2 id="statIncome">₹0</h2></div>
-            <div class="stat-card"><span>Pharmacy</span><h2 id="statMeds">₹0</h2></div>
+        <h2>Admin Suite</h2>
+        <div class="grid-3" style="margin-bottom:20px;">
+            <div class="stat-card"><span>Today's Patients</span><h2 id="statPatients">0</h2></div>
+            <div class="stat-card"><span>Today's Income</span><h2 id="statIncome">₹0</h2></div>
         </div>
-
         <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="action" onclick="showTab('invTab')">Manage Stock</button>
+            <button class="action" onclick="showTab('invTab')">Inventory</button>
             <button class="action" onclick="showTab('tempTab')">Templates</button>
             <button class="action" onclick="showTab('logTab')">Logs</button>
         </div>
-
         <div id="invTab">
-            <h4>Inventory Management</h4>
             <div class="grid-3">
-                <input id="medName" placeholder="Brand Name (e.g., DICLOTWIST M)">
-                <input id="stock" type="number" placeholder="Current Stock">
-                <input id="mrpInv" type="number" placeholder="MRP per Tab/Unit">
+                <input id="medName" placeholder="Med Name">
+                <input id="stock" type="number" placeholder="Stock Qty">
+                <input id="mrpInv" type="number" placeholder="MRP/Unit">
                 <input id="expDate" type="date">
             </div>
-            <button class="action" id="invBtn" onclick="saveMedicine()" style="width:100%; background:var(--secondary);">Update Inventory</button>
+            <button class="action" onclick="saveMedicine()" style="width:100%; margin-top:10px;">Update Stock</button>
             <div id="inventoryListUI" style="margin-top:20px;"></div>
         </div>
-
         <div id="tempTab" class="hidden"><div id="templateListUI"></div></div>
         <div id="logTab" class="hidden"><div id="logListUI"></div></div>
     </div>
 </div>
 
-<button id="printBtn" onclick="processPrint()">Generate & Print Prescription</button>
+<button id="printBtn" class="no-print" onclick="processPrint()" style="display:block; margin:40px auto; padding:15px 100px; background:var(--secondary); color:white; border:none; border-radius:12px; font-size:22px; cursor:pointer; font-weight:bold;">PRINT RX</button>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -167,61 +146,26 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+
+    let inventory = [], templates = [], logs = [], activeLogId = null, editingInvId = null;
+
+    // --- BINDING FUNCTIONS TO WINDOW ---
+    window.scrollToSection = (id) => document.getElementById(id).scrollIntoView({behavior:"smooth"});
+    window.openAdmin = () => { if(prompt("Auth?") === "1234") document.getElementById("adminPanel").classList.toggle("hidden"); };
+    window.showTab = (id) => { ["invTab", "tempTab", "logTab"].forEach(t => document.getElementById(t).classList.add("hidden")); document.getElementById(id).classList.remove("hidden"); };
+    window.checkPediatric = () => document.getElementById("pediatricWarning").classList.toggle("hidden", !(document.getElementById("age").value < 14));
     
-    // --- OFFLINE PERSISTENCE (THE WOW FACTOR) ---
-    const db = initializeFirestore(app, {
-        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-    });
-
-    let inventory = [], templates = [], logs = [], editingInvId = null, editingTempId = null, activeLogId = null;
-
-    // --- REFRESH ENGINE ---
-    const refreshAll = async () => {
-        await Promise.all([refreshInventory(), refreshTemplates(), refreshLogs()]);
-        updateStats();
+    window.addManualRx = () => {
+        const input = document.getElementById("rxInput"), rxBox = document.getElementById("rx");
+        if(input.value) { rxBox.value += (rxBox.value ? "\n" : "") + input.value; input.value = ""; window.updateMRP(); }
     };
 
-    async function refreshInventory() {
-        const snap = await getDocs(collection(db, "inventory"));
-        inventory = [];
-        const ui = document.getElementById("inventoryListUI"), dl = document.getElementById("medList");
-        ui.innerHTML = ""; dl.innerHTML = "";
-        snap.forEach(d => {
-            const m = {id: d.id, ...d.data()}; inventory.push(m);
-            ui.innerHTML += `<div class="inventory-item"><span><strong>${m.name}</strong> (${m.stock}) - ₹${m.mrp}</span>
-                <div><button class="edit-btn" onclick="editMed('${m.id}')">Edit</button><button class="del-btn" onclick="deleteMed('${m.id}')">Del</button></div></div>`;
-            dl.innerHTML += `<option value="${m.name}">`;
-        });
-        checkAlerts();
+    function encodeFee(num) {
+        const map = "ABCDEFGHIJ";
+        return String(num).split('').map(digit => map[parseInt(digit)] || digit).join('');
     }
 
-    async function refreshTemplates() {
-        const snap = await getDocs(collection(db, "templates"));
-        templates = [];
-        const sel = document.getElementById("templateSelector"), ui = document.getElementById("templateListUI");
-        sel.innerHTML = ""; ui.innerHTML = "";
-        snap.forEach(d => {
-            const t = {id: d.id, ...d.data()}; templates.push(t);
-            sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
-            ui.innerHTML += `<div class="inventory-item">${t.name} <div><button class="edit-btn" onclick="editTemplate('${t.id}')">Edit</button><button class="del-btn" onclick="deleteTemp('${t.id}')">Del</button></div></div>`;
-        });
-    }
-
-    async function refreshLogs() {
-        const q = query(collection(db, "prescriptions"), orderBy("timestamp", "desc"));
-        const snap = await getDocs(q);
-        logs = [];
-        const logUI = document.getElementById("logListUI"), revUI = document.getElementById("reviewListUI");
-        logUI.innerHTML = ""; revUI.innerHTML = "";
-        snap.forEach(d => {
-            const p = {id: d.id, ...d.data()}; logs.push(p);
-            const html = `<div class="inventory-item">${p.name} <button class="action" onclick="recallPatient('${p.id}')">Load Data</button></div>`;
-            logUI.innerHTML += html;
-            if(p.forReview) revUI.innerHTML += html;
-        });
-    }
-
-    // --- LOGIC ---
     window.updateMRP = () => {
         const lines = document.getElementById("rx").value.split("\n");
         let sum = 0;
@@ -229,10 +173,10 @@
             let up = line.toUpperCase().trim();
             if(!up) return;
             inventory.forEach(med => {
-                if(up.includes(med.name.toUpperCase())) {
+                if(up.includes(med.name.toUpperCase().trim())) {
                     const dMatch = up.match(/(\d+)\s*(OD|BD|TDS|QID|HS|SOS)/) || up.match(/^(\d+)/) || up.match(/(\d+)\s+/);
                     const d = dMatch ? parseInt(dMatch[1]) : 1;
-                    let f = (up.includes("BD") ? 2 : (up.includes("TDS") ? 3 : (up.includes("QID") ? 4 : 1)));
+                    let f = (up.includes("BD") ? 2 : (up.includes("TDS") ? 3 : 1));
                     const dayMatch = up.match(/X\s*(\d+)/) || up.match(/(\d+)\s*DAY/);
                     const days = dayMatch ? parseInt(dayMatch[1]) : 1;
                     sum += (d * f * days * (med.mrp || 0));
@@ -240,33 +184,43 @@
             });
         });
         document.getElementById("mrp").value = sum.toFixed(2);
-        const total = sum + (parseFloat(document.getElementById("cf").value) || 0);
-        document.getElementById("total").value = "₹" + total.toFixed(2);
+        const cfVal = parseInt(document.getElementById("cf").value) || 0;
+        document.getElementById("secretCodeDisp").value = encodeFee(cfVal);
+        document.getElementById("total").value = "₹" + (sum + cfVal).toFixed(2);
     };
 
     window.processPrint = async () => {
-        const pName = document.getElementById("name").value;
-        if(!pName) return alert("Patient Name Required");
-        document.getElementById("printDate").innerText = new Date().toLocaleDateString();
+        const name = document.getElementById("name").value;
+        if(!name) return alert("Name?");
         
+        const bp = document.getElementById("bp").value.trim();
+        const pr = document.getElementById("pr").value.trim();
+        const temp = document.getElementById("temp").value.trim();
+        const hist = Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value);
+        const tests = Array.from(document.querySelectorAll(".lab-test:checked")).map(i => i.value);
+        const code = document.getElementById("secretCodeDisp").value;
+
+        let vitalsStr = "";
+        if(bp) vitalsStr += `BP: ${bp} `;
+        if(pr) vitalsStr += `Pulse: ${pr} `;
+        if(temp) vitalsStr += `Temp: ${temp}`;
+
         const data = {
-            name: pName, age: document.getElementById("age").value, gender: document.getElementById("gender").value,
-            history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value),
-            rx: document.getElementById("rx").value, extraHistory: document.getElementById("extraHistory").value,
-            bp: document.getElementById("bp").value, pr: document.getElementById("pr").value, temp: document.getElementById("temp").value,
-            mrp: parseFloat(document.getElementById("mrp").value), cf: parseFloat(document.getElementById("cf").value),
+            name, age: document.getElementById("age").value, gender: document.getElementById("gender").value,
+            history: hist, rx: document.getElementById("rx").value, tests, bp, pr, temp,
+            mrp: parseFloat(document.getElementById("mrp").value), cf: parseInt(document.getElementById("cf").value),
             forReview: document.getElementById("markForReview").checked, timestamp: serverTimestamp()
         };
 
         if(activeLogId) await updateDoc(doc(db, "prescriptions", activeLogId), data);
         else await addDoc(collection(db, "prescriptions"), data);
 
-        // Deduction Logic
+        // Deduct Stock
         const lines = data.rx.split("\n");
         for (const line of lines) {
-            const upLine = line.toUpperCase();
             for (const med of inventory) {
-                if (upLine.includes(med.name.toUpperCase())) {
+                if (line.toUpperCase().includes(med.name.toUpperCase().trim())) {
+                    const upLine = line.toUpperCase();
                     const dMatch = upLine.match(/(\d+)/);
                     const d = dMatch ? parseInt(dMatch[0]) : 1;
                     let f = upLine.includes("BD") ? 2 : (upLine.includes("TDS") ? 3 : 1);
@@ -276,64 +230,91 @@
                 }
             }
         }
-        window.print();
-        location.reload();
+
+        const win = window.open('', '_blank');
+        win.document.write(`<html><body style="font-family:sans-serif; padding:20px;">
+            <div style="margin-top:100px;">
+                <p><strong>Name:</strong> ${name} &nbsp;&nbsp; <strong>Age/Sex:</strong> ${data.age}/${data.gender} 
+                <span style="float:right;">${new Date().toLocaleDateString()}</span></p>
+                <p><strong>History:</strong> ${hist.join(", ")} ${document.getElementById("extraHistory").value}</p>
+                ${vitalsStr ? `<p><strong>Vitals:</strong> ${vitalsStr}</p>` : ''}
+                <hr><p><strong>Rx:</strong></p>
+                <pre style="font-size:18px; min-height:280px;">${data.rx}</pre>
+                <p><strong>Investigations:</strong> ${tests.join(", ") || "None"}</p>
+                <div style="position:fixed; bottom:50px; width:100%; text-align:right;"><strong>CODE: ${code} + MRP</strong></div>
+            </div>
+        </body></html>`);
+        win.document.close(); win.print(); location.reload();
     };
 
-    // --- UI ATTACHMENTS ---
-    window.scrollToSection = (id) => document.getElementById(id).scrollIntoView({behavior:"smooth"});
-    window.openAdmin = () => { if(prompt("Pass?") === "1234") document.getElementById("adminPanel").classList.toggle("hidden"); };
-    window.showTab = (id) => { ["invTab", "tempTab", "logTab"].forEach(t => document.getElementById(t).classList.add("hidden")); document.getElementById(id).classList.remove("hidden"); };
-    window.checkPediatric = () => document.getElementById("pediatricWarning").classList.toggle("hidden", !(document.getElementById("age").value < 14));
-    window.addManualRx = () => { document.getElementById("rx").value += (document.getElementById("rx").value ? "\n" : "") + document.getElementById("rxInput").value; document.getElementById("rxInput").value = ""; window.updateMRP(); };
-    
+    async function syncData() {
+        const invSnap = await getDocs(collection(db, "inventory"));
+        inventory = [];
+        const dl = document.getElementById("medList"), uiInv = document.getElementById("inventoryListUI");
+        dl.innerHTML = ""; uiInv.innerHTML = "";
+        invSnap.forEach(d => {
+            const m = {id: d.id, ...d.data()}; inventory.push(m);
+            dl.innerHTML += `<option value="${m.name}">`;
+            uiInv.innerHTML += `<div class="inventory-item"><span>${m.name} (${m.stock})</span> <button class="action" style="background:orange" onclick="editMed('${m.id}')">Edit</button></div>`;
+        });
+
+        const tempSnap = await getDocs(collection(db, "templates"));
+        templates = [];
+        const sel = document.getElementById("templateSelector"); sel.innerHTML = "";
+        tempSnap.forEach(d => { const t = {id: d.id, ...d.data()}; templates.push(t); sel.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
+
+        const logSnap = await getDocs(query(collection(db, "prescriptions"), orderBy("timestamp", "desc")));
+        logs = [];
+        const revUI = document.getElementById("reviewListUI"); revUI.innerHTML = "";
+        logSnap.forEach(d => {
+            const p = {id: d.id, ...d.data()}; logs.push(p);
+            if(p.forReview) revUI.innerHTML += `<div class="inventory-item">${p.name} <button class="action" onclick="recallPatient('${p.id}')">Load</button></div>`;
+        });
+        updateStats();
+    }
+
     window.saveMedicine = async () => {
         const m = { name: document.getElementById("medName").value, stock: parseInt(document.getElementById("stock").value) || 0, mrp: parseFloat(document.getElementById("mrpInv").value) || 0, expDate: document.getElementById("expDate").value };
         if(editingInvId) await updateDoc(doc(db, "inventory", editingInvId), m); else await addDoc(collection(db, "inventory"), m);
-        editingInvId = null; document.querySelectorAll("#invTab input").forEach(i => i.value = ""); await refreshInventory();
-    };
-
-    window.saveCurrentAsTemplate = async () => {
-        const hist = Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value);
-        if(editingTempId) await updateDoc(doc(db, "templates", editingTempId), { history: hist, rx: document.getElementById("rx").value });
-        else { const n = prompt("Template Name:"); if(n) await addDoc(collection(db, "templates"), { name: n, history: hist, rx: document.getElementById("rx").value }); }
-        await refreshTemplates();
+        editingInvId = null; document.querySelectorAll("#invTab input").forEach(i => i.value = ""); syncData();
     };
 
     window.applyMultiTemplates = () => {
         const selected = Array.from(document.getElementById("templateSelector").selectedOptions).map(o => o.value);
-        let h = new Set(), r = [];
-        selected.forEach(id => { const t = templates.find(x => x.id === id); t.history.forEach(i => h.add(i)); t.rx.split("\n").forEach(i => { if(i && !r.includes(i)) r.push(i); }); });
+        let h = new Set(), rx = [];
+        selected.forEach(id => {
+            const t = templates.find(x => x.id === id);
+            t.history.forEach(i => h.add(i));
+            t.rx.split("\n").forEach(r => { if(r && !rx.includes(r)) rx.push(r); });
+        });
         document.getElementById("historyCheckboxList").innerHTML = Array.from(h).map(i => `<label><input type="checkbox" checked value="${i}"> ${i}</label>`).join("");
-        document.getElementById("rx").value = r.join("\n"); window.updateMRP();
+        document.getElementById("rx").value = rx.join("\n"); updateMRP();
     };
 
-    window.editMed = (id) => { const m = inventory.find(x => x.id === id); editingInvId = id; document.getElementById("medName").value = m.name; document.getElementById("stock").value = m.stock; document.getElementById("mrpInv").value = m.mrp; document.getElementById("expDate").value = m.expDate; scrollToSection('adminPanel'); };
-    window.editTemplate = (id) => { const t = templates.find(x => x.id === id); editingTempId = id; document.getElementById("rx").value = t.rx; document.getElementById("historyCheckboxList").innerHTML = t.history.map(i => `<label><input type="checkbox" checked value="${i}"> ${i}</label>`).join(""); scrollToSection('prescription'); };
-    window.deleteMed = async (id) => { if(confirm("Del?")) await deleteDoc(doc(db, "inventory", id)); refreshInventory(); };
-    window.deleteTemp = async (id) => { if(confirm("Del?")) await deleteDoc(doc(db, "templates", id)); refreshTemplates(); };
-    
+    window.saveCurrentAsTemplate = async () => {
+        const name = prompt("Name?");
+        if(name) await addDoc(collection(db, "templates"), { name, history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value), rx: document.getElementById("rx").value });
+        syncData();
+    };
+
     window.recallPatient = (id) => {
         const p = logs.find(x => x.id === id); activeLogId = id;
         document.getElementById("name").value = p.name; document.getElementById("age").value = p.age; document.getElementById("rx").value = p.rx;
-        document.getElementById("bp").value = p.bp; document.getElementById("pr").value = p.pr; document.getElementById("temp").value = p.temp;
-        document.getElementById("historyCheckboxList").innerHTML = p.history.map(i => `<label><input type="checkbox" checked value="${i}"> ${h}</label>`).join("");
+        document.getElementById("bp").value = p.bp || ""; document.getElementById("pr").value = p.pr || ""; document.getElementById("temp").value = p.temp || "";
+        document.getElementById("historyCheckboxList").innerHTML = p.history.map(i => `<label><input type="checkbox" checked value="${i}"> ${i}</label>`).join("");
         window.updateMRP(); scrollToSection('prescription');
     };
 
+    window.editMed = (id) => { const m = inventory.find(x => x.id === id); editingInvId = id; document.getElementById("medName").value = m.name; document.getElementById("stock").value = m.stock; document.getElementById("mrpInv").value = m.mrp; showTab('invTab'); };
+
     function updateStats() {
         const today = new Date().toISOString().split('T')[0];
-        let inc = 0, pts = 0, m = 0;
-        logs.forEach(p => { if(p.timestamp?.toDate().toISOString().split('T')[0] === today) { pts++; m += p.mrp; inc += (p.mrp + p.cf); } });
-        document.getElementById("statPatients").innerText = pts; document.getElementById("statIncome").innerText = "₹" + inc.toFixed(2); document.getElementById("statMeds").innerText = "₹" + m.toFixed(2);
+        let inc = 0, pts = 0;
+        logs.forEach(p => { if(p.timestamp?.toDate().toISOString().split('T')[0] === today) { pts++; inc += (p.mrp + p.cf); } });
+        document.getElementById("statPatients").innerText = pts; document.getElementById("statIncome").innerText = "₹" + inc.toFixed(2);
     }
     
-    function checkAlerts() {
-        const cont = document.getElementById("alertsContainer"); cont.innerHTML = "";
-        inventory.forEach(m => { if(m.stock < 100) cont.innerHTML += `<div class="badge" style="background:#ff7675; color:white; border:none;">Low Stock: ${m.name} (${m.stock} left)</div>`; });
-    }
-
-    refreshAll();
+    syncData();
 </script>
 </body>
 </html>
