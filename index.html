@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinic ERP - Master Fixed v11.0</title>
+    <title>Clinic ERP - Master Master v12.0</title>
     <style>
         :root {
             --primary: #2c3e50; --secondary: #1abc9c; --accent: #3498db;
@@ -27,13 +27,13 @@
             nav, header, button, .no-print, #adminPanel, .section:not(#prescription), #templateSelector { display: none !important; }
             body { background: white; margin: 0; padding: 0; }
             #prescription { display: block !important; padding: 0; margin-top: 100px; }
+            pre { white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; font-size: 18px; border:none; }
         }
-        .inventory-item { border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
-<header class="no-print">CLINIC MASTER ERP v11.0</header>
+<header class="no-print">CLINIC MASTER ERP v12.0</header>
 
 <nav class="no-print">
     <button onclick="scrollToSection('prescription')">New Prescription</button>
@@ -51,7 +51,7 @@
             <input type="number" id="age" placeholder="Age" oninput="checkPediatric()">
             <select id="gender"><option>Male</option><option>Female</option></select>
         </div>
-        <div id="pediatricWarning" class="hidden badge">⚠ <strong>Pediatric Alert:</strong> Please verify mg/kg dosage.</div>
+        <div id="pediatricWarning" class="hidden badge">⚠ <strong>Pediatric Alert:</strong> Verify dosage.</div>
 
         <div class="no-print">
             <h3>History Template</h3>
@@ -93,7 +93,13 @@
         <h3>Billing</h3>
         <div class="grid-3">
             <div><label>Consult Fee</label><input id="cf" type="number" value="0" oninput="updateMRP()"></div>
-            <div><label>Medicine MRP</label><input id="mrp" type="number" value="0" readonly></div>
+            <div>
+                <label>Medicine MRP</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input id="mrp" type="number" value="0" readonly>
+                    <label style="font-size:12px; min-width:120px;"><input type="checkbox" id="toggleMrpPrint" checked> Print '+ MRP'</label>
+                </div>
+            </div>
             <div><label>Fee Code Only</label><input id="secretCodeDisp" readonly style="background:#eee; font-weight:bold;"></div>
         </div>
     </div>
@@ -109,20 +115,18 @@
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <button class="action" onclick="showTab('invTab')">Inventory</button>
             <button class="action" onclick="showTab('tempTab')">Templates</button>
-            <button class="action" onclick="showTab('logTab')">Logs</button>
         </div>
         <div id="invTab">
             <div class="grid-3">
                 <input id="medName" placeholder="Med Name">
-                <input id="stock" type="number" placeholder="Stock Qty">
-                <input id="mrpInv" type="number" placeholder="MRP/Unit">
+                <input id="stock" type="number" placeholder="Qty">
+                <input id="mrpInv" type="number" placeholder="MRP">
                 <input id="expDate" type="date">
             </div>
             <button class="action" onclick="saveMedicine()" style="width:100%; margin-top:10px;">Update Stock</button>
             <div id="inventoryListUI" style="margin-top:20px;"></div>
         </div>
         <div id="tempTab" class="hidden"><div id="templateListUI"></div></div>
-        <div id="logTab" class="hidden"><div id="logListUI"></div></div>
     </div>
 </div>
 
@@ -149,12 +153,11 @@
 
     let inventory = [], templates = [], logs = [], activeLogId = null, editingInvId = null;
 
-    // --- RE-LINKING BUTTONS ---
+    // --- BINDING ---
     window.scrollToSection = (id) => document.getElementById(id).scrollIntoView({behavior:"smooth"});
     window.openAdmin = () => { if(prompt("Auth?") === "1234") document.getElementById("adminPanel").classList.toggle("hidden"); };
-    window.showTab = (id) => { ["invTab", "tempTab", "logTab"].forEach(t => document.getElementById(t).classList.add("hidden")); document.getElementById(id).classList.remove("hidden"); };
+    window.showTab = (id) => { ["invTab", "tempTab"].forEach(t => document.getElementById(t).classList.add("hidden")); document.getElementById(id).classList.remove("hidden"); };
     window.checkPediatric = () => document.getElementById("pediatricWarning").classList.toggle("hidden", !(document.getElementById("age").value < 14));
-    
     window.addManualRx = () => {
         const input = document.getElementById("rxInput"), rxBox = document.getElementById("rx");
         if(input.value) { rxBox.value += (rxBox.value ? "\n" : "") + input.value; input.value = ""; window.updateMRP(); }
@@ -189,84 +192,73 @@
     };
 
     window.processPrint = async () => {
-        // GET LIVE DATA FROM SCREEN
         const name = document.getElementById("name").value;
         const age = document.getElementById("age").value;
         const gender = document.getElementById("gender").value;
-        const bp = document.getElementById("bp").value.trim();
-        const pr = document.getElementById("pr").value.trim();
-        const temp = document.getElementById("temp").value.trim();
-        const extraHist = document.getElementById("extraHistory").value.trim();
+        const bp = document.getElementById("bp").value;
+        const pr = document.getElementById("pr").value;
+        const temp = document.getElementById("temp").value;
+        const extraHist = document.getElementById("extraHistory").value;
         const rx = document.getElementById("rx").value;
         const cf = parseInt(document.getElementById("cf").value) || 0;
-        const mrpVal = parseFloat(document.getElementById("mrp").value) || 0;
         const code = encodeFee(cf);
-        
-        if(!name) return alert("Patient Name is required!");
+        const printMrpLabel = document.getElementById("toggleMrpPrint").checked;
+
+        if(!name) return alert("Patient Name Required");
 
         const selectedHistory = Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value);
         const selectedTests = Array.from(document.querySelectorAll(".lab-test:checked")).map(i => i.value);
 
-        // Vitals Logic (Only show if not empty)
         let vitalsHtml = "";
         if(bp || pr || temp) {
             vitalsHtml = `<p><strong>Vitals:</strong> ${bp ? 'BP:'+bp+' ' : ''} ${pr ? 'Pulse:'+pr+' ' : ''} ${temp ? 'Temp:'+temp : ''}</p>`;
         }
 
-        const data = {
-            name, age, gender, history: selectedHistory, rx, extraHistory: extraHist,
-            bp, pr, temp, mrp: mrpVal, cf, tests: selectedTests,
-            timestamp: serverTimestamp()
-        };
-
-        // SAVE DATA
+        // SAVE
+        const data = { name, age, gender, history: selectedHistory, rx, extraHistory: extraHist, bp, pr, temp, cf, mrp: parseFloat(document.getElementById("mrp").value), forReview: document.getElementById("markForReview").checked, timestamp: serverTimestamp() };
         if(activeLogId) await updateDoc(doc(db, "prescriptions", activeLogId), data);
         else await addDoc(collection(db, "prescriptions"), data);
 
         // STOCK DEDUCTION
-        const rxLines = rx.split("\n");
+        const rxLines = data.rx.split("\n");
         for (const line of rxLines) {
+            const upL = line.toUpperCase();
             for (const med of inventory) {
-                if (line.toUpperCase().includes(med.name.toUpperCase().trim())) {
-                    const upLine = line.toUpperCase();
-                    const dMatch = upLine.match(/(\d+)/);
+                if (upL.includes(med.name.toUpperCase().trim())) {
+                    const dMatch = upL.match(/(\d+)/);
                     const d = dMatch ? parseInt(dMatch[0]) : 1;
-                    let f = upLine.includes("BD") ? 2 : (upLine.includes("TDS") ? 3 : 1);
-                    const dayMatch = upLine.match(/X\s*(\d+)/) || upLine.match(/(\d+)\s*DAY/);
+                    let f = upL.includes("BD") ? 2 : (upL.includes("TDS") ? 3 : 1);
+                    const dayMatch = upL.match(/X\s*(\d+)/) || upL.match(/(\d+)\s*DAY/);
                     const days = dayMatch ? parseInt(dayMatch[1]) : 1;
                     await updateDoc(doc(db, "inventory", med.id), { stock: med.stock - (d * f * days) });
                 }
             }
         }
 
-        // GENERATE PRINT WINDOW
+        // PRINT
         const win = window.open('', '_blank');
         win.document.write(`
-            <html>
-            <head><style>body{font-family:sans-serif; padding:40px;} pre{white-space:pre-wrap; font-size:18px;}</style></head>
-            <body>
+            <html><body style="font-family:sans-serif; padding:40px;">
                 <div style="margin-top:100px;">
                     <p><strong>Name:</strong> ${name} &nbsp;&nbsp; <strong>Age/Sex:</strong> ${age}/${gender} 
                     <span style="float:right;">${new Date().toLocaleDateString()}</span></p>
                     <p><strong>History:</strong> ${selectedHistory.join(", ")} ${extraHist}</p>
                     ${vitalsHtml}
-                    <hr>
-                    <p><strong>Rx:</strong></p>
-                    <pre style="min-height:300px;">${rx}</pre>
+                    <hr><p><strong>Rx:</strong></p>
+                    <pre style="font-size:18px; min-height:300px; white-space:pre-wrap;">${rx}</pre>
                     <p><strong>Investigations:</strong> ${selectedTests.join(", ") || "None"}</p>
                     <div style="position:fixed; bottom:50px; width:100%; text-align:right; font-weight:bold;">
-                        <span>CODE: ${code} + MRP</span>
+                        <span>CODE: ${code} ${printMrpLabel ? '+ MRP' : ''}</span>
                     </div>
                 </div>
-            </body>
-            </html>
+            </body></html>
         `);
         win.document.close();
         win.print();
         location.reload();
     };
 
-    // --- REFRESH DATA ---
+    // --- REFRESH ---
     async function syncData() {
         const invSnap = await getDocs(collection(db, "inventory"));
         inventory = [];
@@ -277,27 +269,24 @@
             dl.innerHTML += `<option value="${m.name}">`;
             uiInv.innerHTML += `<div class="inventory-item"><span>${m.name} (${m.stock})</span> <button class="action" style="background:orange" onclick="editMed('${m.id}')">Edit</button></div>`;
         });
-
         const tempSnap = await getDocs(collection(db, "templates"));
         templates = [];
         const sel = document.getElementById("templateSelector"); sel.innerHTML = "";
         tempSnap.forEach(d => { const t = {id: d.id, ...d.data()}; templates.push(t); sel.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
-
         const logSnap = await getDocs(query(collection(db, "prescriptions"), orderBy("timestamp", "desc")));
-        logs = [];
+        logs = logSnap.docs.map(d => ({id: d.id, ...d.data()}));
         const revUI = document.getElementById("reviewListUI"); revUI.innerHTML = "";
-        logSnap.forEach(d => {
-            const p = {id: d.id, ...d.data()}; logs.push(p);
-            if(p.forReview) revUI.innerHTML += `<div class="inventory-item">${p.name} <button class="action" onclick="recallPatient('${p.id}')">Load</button></div>`;
-        });
+        logs.forEach(p => { if(p.forReview) revUI.innerHTML += `<div class="inventory-item">${p.name} <button class="action" onclick="recallPatient('${p.id}')">Load</button></div>`; });
         updateStats();
     }
 
     window.saveMedicine = async () => {
         const m = { name: document.getElementById("medName").value, stock: parseInt(document.getElementById("stock").value) || 0, mrp: parseFloat(document.getElementById("mrpInv").value) || 0, expDate: document.getElementById("expDate").value };
         if(editingInvId) await updateDoc(doc(db, "inventory", editingInvId), m); else await addDoc(collection(db, "inventory"), m);
-        editingInvId = null; document.querySelectorAll("#invTab input").forEach(i => i.value = ""); syncData();
+        editingInvId = null; syncData();
     };
+
+    window.editMed = (id) => { const m = inventory.find(x => x.id === id); editingInvId = id; document.getElementById("medName").value = m.name; document.getElementById("stock").value = m.stock; document.getElementById("mrpInv").value = m.mrp; showTab('invTab'); };
 
     window.applyMultiTemplates = () => {
         const selected = Array.from(document.getElementById("templateSelector").selectedOptions).map(o => o.value);
@@ -312,7 +301,7 @@
     };
 
     window.saveCurrentAsTemplate = async () => {
-        const name = prompt("Template Name?");
+        const name = prompt("Name?");
         if(name) await addDoc(collection(db, "templates"), { name, history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value), rx: document.getElementById("rx").value });
         syncData();
     };
@@ -320,12 +309,9 @@
     window.recallPatient = (id) => {
         const p = logs.find(x => x.id === id); activeLogId = id;
         document.getElementById("name").value = p.name; document.getElementById("age").value = p.age; document.getElementById("rx").value = p.rx;
-        document.getElementById("bp").value = p.bp || ""; document.getElementById("pr").value = p.pr || ""; document.getElementById("temp").value = p.temp || "";
         document.getElementById("historyCheckboxList").innerHTML = p.history.map(i => `<label><input type="checkbox" checked value="${i}"> ${i}</label>`).join("");
         window.updateMRP(); scrollToSection('prescription');
     };
-
-    window.editMed = (id) => { const m = inventory.find(x => x.id === id); editingInvId = id; document.getElementById("medName").value = m.name; document.getElementById("stock").value = m.stock; document.getElementById("mrpInv").value = m.mrp; showTab('invTab'); };
 
     function updateStats() {
         const today = new Date().toISOString().split('T')[0];
@@ -338,3 +324,4 @@
 </script>
 </body>
 </html>
+
