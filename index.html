@@ -3,152 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinic Management Titan v14.0</title>
+    <title>CLINIC TITAN SUPREME - v30.1 IRONCLAD</title>
     <style>
-        :root { --primary: #2c3e50; --secondary: #1abc9c; --accent: #3498db; --danger: #e74c3c; --warning: #f39c12; --light: #f4f7f6; --white: #ffffff; }
+        :root { --primary: #2c3e50; --secondary: #27ae60; --accent: #2980b9; --danger: #c0392b; --warning: #f39c12; --light: #f4f7f6; --white: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--light); color: #333; }
-        header { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; }
-        nav { background: #34495e; padding: 10px; display: flex; gap: 10px; position: sticky; top: 0; z-index: 1000; justify-content: center; }
-        nav button { background: var(--secondary); border: none; padding: 8px 15px; color: white; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
-        .section { background: var(--white); padding: 25px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        .action { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .hidden { display: none; }
-        .badge { background: #fff3cd; border-left: 5px solid #ffc107; padding: 10px; margin: 10px 0; border-radius: 5px; }
-        .check-group { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; background: #f9f9f9; padding: 15px; border-radius: 8px; }
-        .check-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
-        optgroup { font-weight: bold; color: var(--primary); background: #eee; }
-        
-        @media print {
-            nav, header, button, .no-print, #adminPanel, .section:not(#prescription), #templateSelector { display: none !important; }
-            body { background: white; margin: 0; padding: 0; }
-            #prescription { display: block !important; padding: 0; margin-top: 100px; }
-            pre { white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; font-size: 18px; border:none; }
+        header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--secondary); }
+        nav { background: #34495e; padding: 10px; display: flex; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .container { max-width: 1250px; margin: 15px auto; padding: 0 15px; display: grid; grid-template-columns: 3fr 1.2fr; gap: 15px; }
+        .section { background: var(--white); padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid var(--accent); position: relative; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-top: 5px; }
+        button { cursor: pointer; border: none; border-radius: 4px; font-weight: bold; padding: 10px; transition: 0.2s; }
+        .btn-main { background: var(--secondary); color: white; width: 100%; font-size: 18px; margin-top: 20px; padding: 15px; }
+        .btn-sub { background: var(--accent); color: white; }
+        .btn-warn { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .rx-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fffde7; }
+        .rx-table th, .rx-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .hidden { display: none !important; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 12px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 4px; }
+        .finance-card { background: #fff; padding: 15px; border-radius: 10px; border-left: 5px solid var(--secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        @media print { 
+            .no-print, nav, header, button { display: none !important; } 
+            .section { border: none; box-shadow: none; margin-top: 40px; } 
+            .rx-table { background: white; width: 100%; } 
+            .rx-table input, .rx-table select { border:none !important; background:transparent !important; padding:0 !important; font-size: 16px; font-weight: bold; width: auto !important; -webkit-appearance: none; appearance: none; }
         }
-        .inventory-item { border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
-<header class="no-print">CLINIC TITAN ERP v14.0</header>
+<header class="no-print">
+    <div><strong>CLINIC TITAN SUPREME</strong> <small>v30.1 Ironclad Master</small></div>
+    <div id="clock"></div>
+</header>
 
 <nav class="no-print">
-    <button onclick="scrollToSection('prescription')">New Rx</button>
-    <button onclick="scrollToSection('reviewQueue')">Review Queue</button>
-    <button onclick="openAdmin()">Admin & Finance</button>
+    <button class="btn-sub" onclick="location.reload()">+ NEW PATIENT</button>
+    <button class="btn-sub" onclick="openAdmin()" style="background: #8e44ad;">AUTHORIZED PANEL</button>
 </nav>
 
 <div class="container">
-    <div id="alertsContainer" class="no-print"></div>
-
-    <div id="prescription" class="section">
-        <h3 class="no-print">Patient Details</h3>
-        <div class="grid-3">
-            <input id="name" placeholder="Patient Name">
-            <input type="number" id="age" placeholder="Age" oninput="checkPediatric()">
-            <select id="gender"><option>Male</option><option>Female</option></select>
-        </div>
-        <div id="pediatricWarning" class="hidden badge">⚠ <strong>Pediatric Alert:</strong> Check weight-based dosing.</div>
-
-        <div class="no-print">
-            <h3>Disease Templates (Multi-Select)</h3>
-            <select id="templateSelector" multiple onchange="applyMultiTemplates()">
-                <optgroup label="General / Fever">
-                    <option value="Viral Fever">Viral Fever</option>
-                    <option value="Acute Pharyngitis">Acute Pharyngitis</option>
-                </optgroup>
-                <optgroup label="Respiratory">
-                    <option value="URTI">URTI (Cold/Cough)</option>
-                    <option value="Bronchitis">LRTI / Bronchitis</option>
-                    <option value="Asthma">Asthma/COPD</option>
-                </optgroup>
-                <optgroup label="Gastrointestinal">
-                    <option value="AGE">AGE (Diarrhea/Vomiting)</option>
-                    <option value="Gastritis">Gastritis / APD</option>
-                    <option value="Enteric">Enteric Fever</option>
-                </optgroup>
-                <optgroup label="Urinary & Derm">
-                    <option value="UTI">UTI</option>
-                    <option value="Dermatitis">Dermatitis</option>
-                </optgroup>
-            </select>
-            <div id="historyCheckboxList" style="margin:10px 0;"></div>
-            <textarea id="extraHistory" rows="2" placeholder="Clinical Findings..."></textarea>
-        </div>
-
-        <div class="grid-3 no-print">
-            <input id="bp" placeholder="BP">
-            <input id="pr" placeholder="Pulse">
-            <input id="temp" placeholder="Temp">
-        </div>
-
-        <h3>Prescription (Rx)</h3>
-        <div class="no-print" style="display:flex; gap:10px;">
-            <input list="medList" id="rxInput" placeholder="Search Med...">
-            <datalist id="medList"></datalist>
-            <button class="action" onclick="addManualRx()">Add</button>
-        </div>
-        <textarea id="rx" rows="10" placeholder="Med Name 1 BD X 5 DAYS" onkeyup="updateMRP()"></textarea>
-
-        <h3>Investigations</h3>
-        <div class="check-group">
-            <label><input type="checkbox" class="lab-test" value="CBC"> CBC</label>
-            <label><input type="checkbox" class="lab-test" value="ESR"> ESR</label>
-            <label><input type="checkbox" class="lab-test" value="URINE R/E"> URINE R/E</label>
-            <label><input type="checkbox" class="lab-test" value="USG ABDOMEN"> USG ABDOMEN</label>
-            <label><input type="checkbox" class="lab-test" value="RBS"> RBS</label>
-        </div>
-
-        <div class="no-print" style="margin-top:15px;">
-            <label><input type="checkbox" id="markForReview"> Keep in Review</label>
-            <button onclick="saveCurrentAsTemplate()" style="float:right; border:none; background:none; color:var(--accent); text-decoration:underline; cursor:pointer;">Save as Custom Template</button>
-        </div>
-    </div>
-
-    <div id="billing" class="section no-print">
-        <h3>Billing</h3>
-        <div class="grid-3">
-            <div><label>Consult Fee</label><input id="cf" type="number" value="0" oninput="updateMRP()"></div>
-            <div>
-                <label>Medicine MRP</label>
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <input id="mrp" type="number" value="0" readonly>
-                    <label style="font-size:11px; min-width:80px;"><input type="checkbox" id="toggleMrpPrint" checked> + MRP</label>
-                </div>
+    <div class="main-panel">
+        <div id="prescription" class="section">
+            <h3>1. Patient & Vitals</h3>
+            <div class="grid-3">
+                <input id="pName" placeholder="Patient Name" style="grid-column: span 2; border-left: 5px solid var(--secondary); font-weight: bold;">
+                <input id="pAge" type="number" placeholder="Age" oninput="checkPediatric()">
+                <select id="pGender"><option>Male</option><option>Female</option></select>
             </div>
-            <div><label>Code</label><input id="secretCodeDisp" readonly style="background:#eee; font-weight:bold;"></div>
+            <div id="pediatricWarning" class="hidden" style="background:#e74c3c; color:white; padding:10px; margin:10px 0; border-radius:6px; font-weight:bold; text-align:center;">⚠️ PEDIATRIC DOSAGE: Patient is under 14 years!</div>
+
+            <div class="grid-3 no-print" style="margin-top:10px;">
+                <input id="vBP" placeholder="BP">
+                <input id="vPR" placeholder="Pulse">
+                <input id="vTemp" placeholder="Temp">
+                <input id="vWeight" placeholder="Weight">
+            </div>
+
+            <div class="no-print" style="margin-top:20px;">
+                <h3>2. Clinical Symptoms</h3>
+                <div style="display: flex; gap: 10px;">
+                    <select id="templateSelector" multiple style="height: 150px; flex: 2;" onchange="applySymptomLogic()">
+                        <optgroup label="Quick Add">
+                            <option value="Fever">Fever</option>
+                            <option value="Body Ache">Body Ache</option>
+                            <option value="Gastritis">Gastritis</option>
+                            <option value="Dry Cough">Dry Cough</option>
+                            <option value="Wet Cough">Wet Cough</option>
+                        </optgroup>
+                        <optgroup label="Your Saved Combos" id="dynamicOptGroup"></optgroup>
+                    </select>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn-warn" onclick="saveAsNewTemplate()">SAVE COMBO</button>
+                        <button class="btn-sub" onclick="updateExistingTemplate()">UPDATE SELECTED</button>
+                    </div>
+                </div>
+                <div id="historyCheckboxList" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+                <textarea id="extraHistory" placeholder="Diagnosis / Notes..."></textarea>
+            </div>
+
+            <h3 class="no-print" style="margin-top:20px;">3. Rx Builder (Live Editable)</h3>
+            <div class="no-print" style="background:#f0f3f5; padding:15px; border-radius:8px; display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 50px; gap: 8px; align-items: end;">
+                <div><label>Medicine</label><input list="medInventory" id="rxMed" placeholder="Search..."></div>
+                <div><label>Frequency</label>
+                    <select id="rxFreq">
+                        <option value="1-0-1 (BD)">BD</option>
+                        <option value="1-1-1 (TDS)">TDS</option>
+                        <option value="1-0-0 (OD)">OD</option>
+                        <option value="STAT">STAT</option>
+                        <option value="SOS">SOS</option>
+                    </select>
+                </div>
+                <div><label>Qty</label><input type="number" id="rxQtyVal" value="1"></div>
+                <div><label>Days</label><input type="number" id="rxDays" value="5"></div>
+                <button class="btn-sub" onclick="addMedRow()" style="height:42px;">+</button>
+            </div>
+
+            <table class="rx-table">
+                <thead><tr><th>Medicine Name</th><th>Frequency</th><th>Dose</th><th>Days</th><th class="no-print">X</th></tr></thead>
+                <tbody id="rxBody"></tbody>
+            </table>
+
+            <div class="no-print" style="margin-top:20px; background:#fff3cd; padding:15px; border-radius:8px;">
+                <label><input type="checkbox" id="markObservation"> <b>KEEP IN OBSERVATION BED</b></label>
+            </div>
         </div>
+        <button class="btn-main no-print" onclick="processFinalPrint()">PRINT & SAVE TRANSACTION</button>
     </div>
 
-    <div id="reviewQueue" class="section no-print"><h3>Review Queue</h3><div id="reviewListUI"></div></div>
-
-    <div id="adminPanel" class="section hidden no-print">
-        <div class="grid-3">
-            <div class="stat-card"><span>Patients</span><h2 id="statPatients">0</h2></div>
-            <div class="stat-card"><span>Total ₹</span><h2 id="statIncome">₹0</h2></div>
-            <div class="stat-card"><span>Med ₹</span><h2 id="statMeds">₹0</h2></div>
+    <div class="side-panel no-print">
+        <div class="section" style="border-top-color: var(--secondary);">
+            <h3>Billing Guard</h3>
+            <label>Consult Fee</label>
+            <input type="number" id="feeConsult" value="0" oninput="calculateBilling()">
+            <div style="background:#e8f5e9; padding:10px; margin-top:10px; border-radius:5px; text-align:center;">
+                <small>Secret Alpha Code:</small>
+                <div id="secretCode" style="font-size:26px; font-weight:bold; color: var(--secondary);">---</div>
+            </div>
+            <div style="font-size:18px; text-align:center; font-weight:bold; margin-top:10px;">Total: <span id="totalBill">₹0</span></div>
         </div>
-        <div style="margin:20px 0;">
-            <button class="action" onclick="showTab('invTab')">Inventory</button>
-            <button class="action" onclick="showTab('tempTab')">Saved Templates</button>
-            <button class="action" onclick="showTab('logTab')">Logs</button>
+        <div class="section" style="margin-top:15px;">
+            <h3>Observation List</h3>
+            <div id="obsListUI" style="font-size:13px;">None.</div>
         </div>
-        <div id="invTab">
-            <input id="medName" placeholder="Med Name">
-            <input id="stock" type="number" placeholder="Qty">
-            <input id="mrpInv" type="number" placeholder="MRP">
-            <input id="expDate" type="date">
-            <button class="action" onclick="saveMedicine()" style="width:100%; margin:10px 0;">Update Stock</button>
-            <div id="inventoryListUI"></div>
-        </div>
-        <div id="tempTab" class="hidden"><div id="templateListUI"></div></div>
-        <div id="logTab" class="hidden"><div id="logListUI"></div></div>
     </div>
 </div>
 
-<button id="printBtn" class="no-print" onclick="processPrint()" style="display:block; margin:20px auto; padding:15px 100px; background:var(--secondary); color:white; border:none; border-radius:12px; font-size:20px; cursor:pointer; font-weight:bold;">PRINT RX</button>
+<div id="adminModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
+            <h2>AUTHORIZED CONTROL</h2>
+            <button onclick="closeAdmin()" class="btn-danger">CLOSE [ESC]</button>
+        </div>
+        <div style="margin:15px 0; display:flex; gap:10px;">
+            <button class="btn-sub" onclick="showAdminTab('finance')">Finance</button>
+            <button class="btn-sub" onclick="showAdminTab('inv')">Inventory</button>
+            <button class="btn-sub" onclick="showAdminTab('temps')">Templates</button>
+            <button class="btn-sub" onclick="showAdminTab('logs')">History</button>
+        </div>
+        <div id="tabFinance" class="hidden">
+            <div class="grid-3">
+                <div class="finance-card"><h4>Consult Fees</h4><h2 id="totalFees">₹0</h2></div>
+                <div class="finance-card"><h4>Medicine Sales</h4><h2 id="totalMedSales">₹0</h2></div>
+                <div class="finance-card" style="border-left-color: var(--accent);"><h4>Grand Total</h4><h2 id="grandTotal">₹0</h2></div>
+            </div>
+        </div>
+        <div id="tabInv" class="hidden">
+            <div class="grid-3"><input id="invName" placeholder="Name"><input id="invStock" type="number" placeholder="Qty"><input id="invMRP" type="number" placeholder="MRP"></div>
+            <button class="btn-sub" id="invSaveBtn" onclick="saveToInventory()" style="width:100%; margin-top:10px;">SAVE / UPDATE ITEM</button>
+            <div id="inventoryListUI" style="margin-top:15px;"></div>
+        </div>
+        <div id="tabTemps" class="hidden"><div id="templateListUI"></div></div>
+        <div id="tabLogs" class="hidden"><div id="auditLogUI"></div></div>
+    </div>
+</div>
+
+<datalist id="medInventory"></datalist>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -166,163 +179,177 @@
     const app = initializeApp(firebaseConfig);
     const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 
-    let inventory = [], templates = [], logs = [], activeLogId = null, editingInvId = null;
+    let inventory = [], logs = [], currentRx = [], activeId = null, templates = [], editingMedId = null;
 
-    // --- MASTER TEMPLATE DATA ---
     const clinicalMaster = {
-        "Viral Fever": {h:["Fever", "Myalgia", "Headache", "Weakness"], r:"T. Paracetamol 650mg 1 TDS X 3 DAYS"},
-        "Acute Pharyngitis": {h:["Sore Throat", "Pain during swallowing", "Fever"], r:"T. Azithromycin 500mg 1 OD X 3 DAYS\nT. Paracetamol 650mg 1 BD X 3 DAYS"},
-        "URTI": {h:["Cough", "Running Nose", "Sneezing"], r:"T. Cetirizine 10mg 1 HS X 5 DAYS\nSyp. Ascoril 10ml TDS"},
-        "Bronchitis": {h:["Productive Cough", "Chest Congestion", "Breathlessness"], r:"T. Augmentin 625mg 1 BD X 5 DAYS\nSyp. Ambroxol 10ml TDS"},
-        "Asthma": {h:["Wheezing", "Dry Cough", "Tightness in Chest"], r:"Inhaler Salbutamol 2 puffs SOS\nT. Deriphyllin 150mg 1 BD X 5 DAYS"},
-        "AGE": {h:["Loose Stools", "Vomiting", "Abdominal Cramps"], r:"T. Norflox-TZ 1 BD X 5 DAYS\nORS 1 PKT SOS\nT. Pantop 40mg 1 OD (AC)"},
-        "Gastritis": {h:["Heartburn", "Epigastric Pain", "Bloating"], r:"C. Pan-D 1 OD (AC) X 10 DAYS\nSyp. Sucralfate 10ml TDS"},
-        "Enteric": {h:["Step-ladder Fever", "Coated Tongue", "Anorexia"], r:"T. Cefixime 200mg 1 BD X 7 DAYS\nT. Paracetamol 650mg 1 TDS"},
-        "UTI": {h:["Burning Micturition", "Frequency", "Lower Abdominal Pain"], r:"T. Nitrofurantoin 100mg 1 BD X 5 DAYS\nSyp. Citralka 10ml TDS"},
-        "Dermatitis": {h:["Itching", "Redness", "Skin Lesions"], r:"T. Levocetirizine 5mg 1 HS X 10 DAYS\nCream Betadine Apply Locally"}
+        "Fever": [{name: "T. Paracetamol 650", freq: "1-1-1 (TDS)", unitQty: 1, days: 3}],
+        "Body Ache": [{name: "T. Zerodol-P", freq: "1-0-1 (BD)", unitQty: 1, days: 3}],
+        "Gastritis": [{name: "C. Pan-40", freq: "1-0-0 (OD)", unitQty: 1, days: 5}],
+        "Dry Cough": [{name: "Syp. Ascoril D", freq: "1-1-1 (TDS)", unitQty: 5, days: 5}],
+        "Wet Cough": [{name: "Syp. Ascoril LS", freq: "1-1-1 (TDS)", unitQty: 5, days: 5}]
     };
 
-    // --- WINDOW GLOBALS ---
-    window.scrollToSection = (id) => document.getElementById(id).scrollIntoView({behavior:"smooth"});
-    window.openAdmin = () => { if(prompt("Auth?") === "1234") document.getElementById("adminPanel").classList.toggle("hidden"); };
-    window.showTab = (id) => { ["invTab", "tempTab", "logTab"].forEach(t => document.getElementById(t).classList.add("hidden")); document.getElementById(id).classList.remove("hidden"); };
-    window.checkPediatric = () => document.getElementById("pediatricWarning").classList.toggle("hidden", !(document.getElementById("age").value < 14));
-    window.addManualRx = () => { const i = document.getElementById("rxInput"), r = document.getElementById("rx"); if(i.value) { r.value += (r.value ? "\n" : "") + i.value; i.value = ""; window.updateMRP(); } };
-
-    function encodeFee(num) {
-        const map = "ABCDEFGHIJ";
-        return String(num).split('').map(digit => map[parseInt(digit)] || digit).join('');
-    }
-
-    // --- CALCULATION ---
-    window.updateMRP = () => {
-        const lines = document.getElementById("rx").value.split("\n");
-        let sum = 0;
-        lines.forEach(line => {
-            const up = line.toUpperCase().trim();
-            if(!up) return;
-            inventory.forEach(med => {
-                if(up.includes(med.name.toUpperCase().trim())) {
-                    const dMatch = up.match(/(\d+)\s*(OD|BD|TDS|QID|HS|SOS)/) || up.match(/^(\d+)/) || up.match(/(\d+)\s+/);
-                    const d = dMatch ? parseInt(dMatch[1]) : 1;
-                    const f = up.includes("BD") ? 2 : (up.includes("TDS") ? 3 : (up.includes("QID") ? 4 : 1));
-                    const dayMatch = up.match(/X\s*(\d+)/) || up.match(/(\d+)\s*DAY/);
-                    const days = dayMatch ? parseInt(dayMatch[1]) : 1;
-                    sum += (d * f * days * (med.mrp || 0));
-                }
-            });
-        });
-        document.getElementById("mrp").value = sum.toFixed(2);
-        const cf = parseInt(document.getElementById("cf").value) || 0;
-        document.getElementById("secretCodeDisp").value = encodeFee(cf);
-        document.getElementById("total").value = "₹" + (sum + cf).toFixed(2);
+    window.checkPediatric = () => {
+        const age = document.getElementById('pAge').value;
+        const alertBox = document.getElementById('pediatricWarning');
+        (age > 0 && age < 14) ? alertBox.classList.remove('hidden') : alertBox.classList.add('hidden');
     };
 
-    // --- TEMPLATE LOGIC ---
-    window.applyMultiTemplates = () => {
-        const selected = Array.from(document.getElementById("templateSelector").selectedOptions).map(o => o.value);
-        let hSet = new Set(), rxSet = new Set();
-        
-        selected.forEach(val => {
-            const data = clinicalMaster[val] || templates.find(t => t.name === val);
-            if(data) {
-                data.h ? data.h.forEach(i => hSet.add(i)) : data.history.forEach(i => hSet.add(i));
-                const meds = data.r ? data.r.split("\n") : data.rx.split("\n");
-                meds.forEach(m => { if(m.trim()) rxSet.add(m.trim()); });
+    window.openAdmin = () => { if(prompt("Auth?")==="1234") { document.getElementById('adminModal').classList.remove('hidden'); window.sync(); showAdminTab('finance'); } };
+    window.closeAdmin = () => document.getElementById('adminModal').classList.add('hidden');
+    window.addEventListener('keydown', (e) => { if(e.key === "Escape") closeAdmin(); });
+
+    window.showAdminTab = (t) => {
+        ['tabFinance', 'tabInv', 'tabTemps', 'tabLogs'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('hidden');
+        if(t === 'finance') updateFinanceUI();
+    };
+
+    window.calculateBilling = () => {
+        const fee = parseFloat(document.getElementById('feeConsult').value) || 0;
+        document.getElementById('secretCode').innerText = String(fee).split('').map(d => "ABCDEFGHIJ"[parseInt(d)] || d).join('');
+        let mTotal = 0;
+        currentRx.forEach(item => {
+            const med = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
+            if(med) {
+                let mult = item.freq.includes("BD")?2:item.freq.includes("TDS")?3:1;
+                mTotal += (parseFloat(item.unitQty) * mult * parseInt(item.days) * med.mrp);
             }
         });
-
-        document.getElementById("historyCheckboxList").innerHTML = Array.from(hSet).map(i => `<label><input type="checkbox" checked value="${i}"> ${i}</label>`).join("");
-        document.getElementById("rx").value = Array.from(rxSet).join("\n");
-        window.updateMRP();
+        document.getElementById('totalBill').innerText = "₹" + (fee + mTotal).toFixed(2);
+        return { fee, mTotal };
     };
 
-    // --- PRINT & RECALL ---
-    window.processPrint = async () => {
-        const name = document.getElementById("name").value;
-        const cf = parseInt(document.getElementById("cf").value) || 0;
-        const mrpVal = parseFloat(document.getElementById("mrp").value) || 0;
-        const rx = document.getElementById("rx").value;
-        if(!name) return alert("Name Required");
+    window.addMedRow = (name, freq, qty, days) => {
+        const n = name || document.getElementById('rxMed').value;
+        const f = freq || document.getElementById('rxFreq').value;
+        const q = qty || document.getElementById('rxQtyVal').value;
+        const d = days || document.getElementById('rxDays').value;
+        if(!n || currentRx.some(i => i.name.toLowerCase() === n.toLowerCase())) return;
+        currentRx.push({ name: n, freq: f, unitQty: q, days: d });
+        renderTable();
+        document.getElementById('rxMed').value = "";
+    };
 
-        const history = Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value);
-        const tests = Array.from(document.querySelectorAll(".lab-test:checked")).map(i => i.value);
-        const bp = document.getElementById("bp").value, pr = document.getElementById("pr").value, temp = document.getElementById("temp").value;
-        const showMrpText = document.getElementById("toggleMrpPrint").checked;
+    window.updateInlineRx = (idx, field, val) => {
+        currentRx[idx][field] = val;
+        calculateBilling();
+    };
 
-        const data = { name, age: document.getElementById("age").value, gender: document.getElementById("gender").value, history, rx, tests, bp, pr, temp, mrp: mrpVal, cf, forReview: document.getElementById("markForReview").checked, timestamp: serverTimestamp() };
+    function renderTable() {
+        const b = document.getElementById('rxBody'); b.innerHTML = "";
+        currentRx.forEach((item, idx) => {
+            b.innerHTML += `<tr>
+                <td><input type="text" value="${item.name}" oninput="updateInlineRx(${idx}, 'name', this.value)"></td>
+                <td><input type="text" value="${item.freq}" oninput="updateInlineRx(${idx}, 'freq', this.value)" style="width:90px"></td>
+                <td><input type="number" value="${item.unitQty}" oninput="updateInlineRx(${idx}, 'unitQty', this.value)" style="width:50px"></td>
+                <td><input type="number" value="${item.days}" oninput="updateInlineRx(${idx}, 'days', this.value)" style="width:50px"></td>
+                <td class="no-print"><button class="btn-danger" onclick="removeRx(${idx})">X</button></td>
+            </tr>`;
+        });
+        calculateBilling();
+    }
+    window.removeRx = (idx) => { currentRx.splice(idx,1); renderTable(); };
 
-        if(activeLogId) await updateDoc(doc(db, "prescriptions", activeLogId), data);
-        else await addDoc(collection(db, "prescriptions"), data);
+    window.applySymptomLogic = () => {
+        const selected = Array.from(document.getElementById('templateSelector').selectedOptions);
+        selected.forEach(opt => {
+            const meds = clinicalMaster[opt.value] || templates.find(t => t.id === opt.value)?.rxData;
+            if(meds) meds.forEach(m => window.addMedRow(m.name || m.m, m.freq || m.f, m.unitQty || m.q, m.days || m.dy));
+        });
+        document.getElementById("historyCheckboxList").innerHTML = selected.map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s.text}"> ${s.text}</label>`).join("");
+    };
 
-        // Deduct Stock
-        for (const line of rx.split("\n")) {
-            for (const med of inventory) {
-                if (line.toUpperCase().includes(med.name.toUpperCase().trim())) {
-                    const dMatch = line.match(/(\d+)/); const d = dMatch ? parseInt(dMatch[0]) : 1;
-                    const f = line.toUpperCase().includes("BD") ? 2 : (line.toUpperCase().includes("TDS") ? 3 : 1);
-                    const dayMatch = line.match(/X\s*(\d+)/) || line.match(/(\d+)\s*DAY/); const days = dayMatch ? parseInt(dayMatch[1]) : 1;
-                    await updateDoc(doc(db, "inventory", med.id), { stock: med.stock - (d * f * days) });
-                }
+    window.processFinalPrint = async () => {
+        if(!pName.value) return alert("Name Required");
+        const billingInfo = calculateBilling();
+        const data = { 
+            name: pName.value, age: pAge.value, vitals: { bp: vBP.value, pr: vPR.value, temp: vTemp.value },
+            history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value),
+            extra: extraHistory.value, rx: currentRx, billing: { consult: billingInfo.fee, medTotal: billingInfo.mTotal, code: secretCode.innerText }, 
+            isObs: markObservation.checked, timestamp: serverTimestamp() 
+        };
+        for(let item of currentRx){
+            let sMed = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
+            if(sMed) {
+                let mult = item.freq.includes("BD")?2:item.freq.includes("TDS")?3:1;
+                await updateDoc(doc(db, "inventory", sMed.id), { stock: sMed.stock - (parseFloat(item.unitQty) * mult * parseInt(item.days)) });
             }
         }
+        activeId ? await updateDoc(doc(db, "prescriptions", activeId), data) : await addDoc(collection(db, "prescriptions"), data);
+        window.print(); location.reload();
+    };
 
-        const win = window.open('', '_blank');
-        win.document.write(`<html><body style="font-family:sans-serif; padding:40px;">
-            <div style="margin-top:100px;">
-                <p><strong>Name:</strong> ${name} &nbsp;&nbsp; <strong>Age/Sex:</strong> ${data.age}/${data.gender} <span style="float:right;">${new Date().toLocaleDateString()}</span></p>
-                <p><strong>History:</strong> ${history.join(", ")} ${document.getElementById("extraHistory").value}</p>
-                ${(bp||pr||temp) ? `<p><strong>Vitals:</strong> ${bp?'BP:'+bp+' ':''} ${pr?'P:'+pr+' ':''} ${temp?'T:'+temp+' ':''}</p>` : ''}
-                <hr><pre style="min-height:280px;">${rx}</pre>
-                <p><strong>Investigations:</strong> ${tests.join(", ") || "None"}</p>
-                <div style="position:fixed; bottom:50px; width:100%; text-align:right;"><strong>CODE: ${encodeFee(cf)} ${showMrpText ? '+ MRP' : ''}</strong></div>
-            </div></body></html>`);
-        win.document.close(); win.print(); location.reload();
+    function updateFinanceUI() {
+        let f = 0, m = 0;
+        logs.forEach(l => { f += parseFloat(l.billing?.consult || 0); m += parseFloat(l.billing?.medTotal || 0); });
+        document.getElementById('totalFees').innerText = "₹" + f.toFixed(2);
+        document.getElementById('totalMedSales').innerText = "₹" + m.toFixed(2);
+        document.getElementById('grandTotal').innerText = "₹" + (f + m).toFixed(2);
+    }
+
+    window.sync = async () => {
+        const iSnap = await getDocs(collection(db, "inventory"));
+        inventory = iSnap.docs.map(d => ({id: d.id, ...d.data()}));
+        document.getElementById('medInventory').innerHTML = inventory.map(m => `<option value="${m.name}">`).join("");
+        document.getElementById('inventoryListUI').innerHTML = inventory.map(m => `
+            <div class="item-row">
+                <span><strong>${m.name}</strong> (Stock: ${m.stock})</span>
+                <div><button class="btn-sub" onclick="editMed('${m.id}')">EDIT</button><button class="btn-danger" onclick="deleteMed('${m.id}')">DEL</button></div>
+            </div>`).join("");
+
+        const tSnap = await getDocs(collection(db, "templates"));
+        templates = tSnap.docs.map(d => ({id: d.id, ...d.data()}));
+        document.getElementById('dynamicOptGroup').innerHTML = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
+        document.getElementById('templateListUI').innerHTML = templates.map(t => `<div class="item-row"><span><strong>${t.name}</strong></span><div><button class="btn-sub" onclick="recallTemplate('${t.id}')">EDIT</button><button class="btn-danger" onclick="deleteTemp('${t.id}')">DEL</button></div></div>`).join("");
+
+        const lSnap = await getDocs(query(collection(db, "prescriptions"), orderBy("timestamp", "desc")));
+        logs = lSnap.docs.map(d => ({id: d.id, ...d.data()}));
+        document.getElementById('auditLogUI').innerHTML = logs.map(p => `<div class="item-row"><span>${p.name} (Code: ${p.billing?.code})</span><button class="btn-sub" onclick="recallPatient('${p.id}')">LOAD</button></div>`).join("");
+        document.getElementById('obsListUI').innerHTML = logs.filter(p => p.isObs).map(p => `<div class="item-row" style="background:#fff9e6;"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">REVIEW</button></div>`).join("") || "None.";
+    };
+
+    window.saveToInventory = async () => {
+        const data = { name: invName.value, stock: parseFloat(invStock.value), mrp: parseFloat(invMRP.value) };
+        editingMedId ? await updateDoc(doc(db, "inventory", editingMedId), data) : await addDoc(collection(db, "inventory"), data);
+        invName.value = ""; invStock.value = ""; invMRP.value = ""; editingMedId = null; sync();
     };
 
     window.recallPatient = (id) => {
-        const p = logs.find(x => x.id === id); activeLogId = id;
-        document.getElementById("name").value = p.name; document.getElementById("age").value = p.age; document.getElementById("rx").value = p.rx;
-        document.getElementById("cf").value = p.cf || 0;
-        document.getElementById("bp").value = p.bp || ""; document.getElementById("pr").value = p.pr || ""; document.getElementById("temp").value = p.temp || "";
-        document.querySelectorAll(".lab-test").forEach(box => { box.checked = p.tests?.includes(box.value); });
-        document.getElementById("historyCheckboxList").innerHTML = p.history.map(h => `<label><input type="checkbox" checked value="${h}"> ${h}</label>`).join("");
-        window.updateMRP(); scrollToSection('prescription');
+        const p = logs.find(x => x.id === id);
+        activeId = id; pName.value = p.name; pAge.value = p.age || ""; feeConsult.value = p.billing?.consult || 0;
+        extraHistory.value = p.extra || ""; currentRx = p.rx || []; renderTable(); closeAdmin();
+        document.getElementById("historyCheckboxList").innerHTML = (p.history || []).map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s}"> ${s}</label>`).join("");
     };
 
-    // --- REFRESH ---
-    async function sync() {
-        const invSnap = await getDocs(collection(db, "inventory"));
-        inventory = invSnap.docs.map(d => ({id: d.id, ...d.data()}));
-        const uiInv = document.getElementById("inventoryListUI"), dl = document.getElementById("medList");
-        uiInv.innerHTML = ""; dl.innerHTML = "";
-        inventory.forEach(m => {
-            dl.innerHTML += `<option value="${m.name}">`;
-            uiInv.innerHTML += `<div class="inventory-item"><span>${m.name} (${m.stock})</span><button class="action" style="background:orange" onclick="editMed('${m.id}')">Edit</button></div>`;
-        });
-        const logSnap = await getDocs(query(collection(db, "prescriptions"), orderBy("timestamp", "desc")));
-        logs = logSnap.docs.map(d => ({id: d.id, ...d.data()}));
-        const revUI = document.getElementById("reviewListUI"); revUI.innerHTML = "";
-        logs.forEach(p => { if(p.forReview) revUI.innerHTML += `<div class="inventory-item">${p.name} <button class="action" onclick="recallPatient('${p.id}')">View</button></div>`; });
-        updateFinance();
-    }
-
-    window.saveMedicine = async () => {
-        const m = { name: document.getElementById("medName").value, stock: parseInt(document.getElementById("stock").value) || 0, mrp: parseFloat(document.getElementById("mrpInv").value) || 0, expDate: document.getElementById("expDate").value };
-        if(editingInvId) await updateDoc(doc(db, "inventory", editingInvId), m); else await addDoc(collection(db, "inventory"), m);
-        editingInvId = null; sync();
+    window.recallTemplate = (id) => {
+        const t = templates.find(x => x.id === id);
+        currentRx = t.rxData || []; renderTable(); closeAdmin();
     };
 
-    window.editMed = (id) => { const m = inventory.find(x=>x.id===id); editingInvId=id; document.getElementById("medName").value=m.name; document.getElementById("stock").value=m.stock; document.getElementById("mrpInv").value=m.mrp; showTab('invTab'); };
+    window.saveAsNewTemplate = async () => {
+        const n = prompt("Combo Name?");
+        if(n) { await addDoc(collection(db, "templates"), { name: n, rxData: currentRx }); sync(); }
+    };
 
-    function updateFinance() {
-        const today = new Date().toISOString().split('T')[0];
-        let pts = 0, inc = 0, mSum = 0;
-        logs.forEach(p => { if(p.timestamp?.toDate().toISOString().split('T')[0] === today) { pts++; mSum += (p.mrp || 0); inc += ((p.mrp || 0) + (p.cf || 0)); } });
-        document.getElementById("statPatients").innerText = pts; document.getElementById("statIncome").innerText = "₹" + inc.toFixed(2); document.getElementById("statMeds").innerText = "₹" + mSum.toFixed(2);
-    }
-    
+    window.updateExistingTemplate = async () => {
+        const sel = document.getElementById('templateSelector').value;
+        if(!sel) return alert("Select template");
+        await updateDoc(doc(db, "templates", sel), { rxData: currentRx });
+        alert("Updated!"); sync();
+    };
+
+    window.editMed = (id) => {
+        const m = inventory.find(i => i.id === id);
+        invName.value = m.name; invStock.value = m.stock; invMRP.value = m.mrp;
+        editingMedId = id; document.getElementById('invSaveBtn').innerText = "UPDATE MEDICINE";
+    };
+
+    window.deleteMed = async (id) => { if(confirm("Del?")) { await deleteDoc(doc(db, "inventory", id)); sync(); } };
+    window.deleteTemp = async (id) => { if(confirm("Del?")) { await deleteDoc(doc(db, "templates", id)); sync(); } };
+
     sync();
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString(); }, 1000);
 </script>
 </body>
 </html>
