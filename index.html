@@ -26,11 +26,30 @@
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 4px; }
         .finance-card { background: #fff; padding: 15px; border-radius: 10px; border-left: 5px solid var(--secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px; }
         @media print { 
-            .no-print, nav, header, button { display: none !important; } 
-            .section { border: none; box-shadow: none; margin-top: 40px; } 
-            .rx-table { background: white; width: 100%; } 
-            .rx-table input, .rx-table select { border:none !important; background:transparent !important; padding:0 !important; font-size: 16px; font-weight: bold; width: auto !important; -webkit-appearance: none; appearance: none; }
-        }
+    .no-print, nav, header, button, .modal-overlay { display: none !important; } 
+    body { background: white; font-size: 14px; }
+    .container { display: block; margin: 0; padding: 0; width: 100%; }
+    .section { border: none !important; box-shadow: none !important; padding: 10px !important; margin: 0 !important; }
+    
+    /* Make inputs look like plain text */
+    input, textarea, select { border: none !important; background: none !important; padding: 0 !important; appearance: none; -webkit-appearance: none; }
+    
+    /* Hide empty vitals */
+    input:placeholder-shown { display: none !important; }
+    
+    .rx-table { margin-top: 10px; border-top: 2px solid #333; }
+    .rx-table th { background: #eee !important; }
+
+    /* Small Nurse Code at bottom right */
+    #secretCode { 
+        position: fixed; bottom: 10px; right: 10px; 
+        font-size: 12px !important; color: #777 !important; border: 1px solid #ddd; padding: 3px;
+    }
+
+    /* Keep relevant layout tight */
+    h3 { margin-bottom: 5px; border-bottom: 1px solid #eee; }
+}
+
     </style>
 </head>
 <body>
@@ -143,6 +162,7 @@
             <button class="btn-sub" onclick="showAdminTab('inv')">Inventory</button>
             <button class="btn-sub" onclick="showAdminTab('temps')">Templates</button>
             <button class="btn-sub" onclick="showAdminTab('logs')">History</button>
+            <button class="btn-sub" onclick="showAdminTab('reports')" style="background:#2ecc71;">REPORTS</button>
         </div>
         <div id="tabFinance" class="hidden">
             <div class="grid-3">
@@ -158,6 +178,17 @@
         </div>
         <div id="tabTemps" class="hidden"><div id="templateListUI"></div></div>
         <div id="tabLogs" class="hidden"><div id="auditLogUI"></div></div>
+        <div id="tabReports" class="hidden">
+    <div style="display:flex; gap:10px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:8px;">
+        <input type="date" id="reportDate" style="width:auto;">
+        <button class="btn-sub" onclick="generateReport('day')">Daily Report</button>
+        <button class="btn-sub" onclick="generateReport('month')">Monthly Report</button>
+    </div>
+    <div id="reportResultUI" class="finance-card" style="border-left-color: var(--accent); min-height: 200px;">
+        <p>Select a date and click a button to generate report...</p>
+    </div>
+</div>
+
     </div>
 </div>
 
@@ -165,7 +196,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, updateDoc, doc, getDocs, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, updateDoc, doc, getDocs, deleteDoc, serverTimestamp, query, orderBy, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBdwITU8DS8u9cMEabaoLRAwqmS1P8AegA",
@@ -200,25 +231,46 @@
     window.addEventListener('keydown', (e) => { if(e.key === "Escape") closeAdmin(); });
 
     window.showAdminTab = (t) => {
-        ['tabFinance', 'tabInv', 'tabTemps', 'tabLogs'].forEach(id => document.getElementById(id).classList.add('hidden'));
-        document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('hidden');
-        if(t === 'finance') updateFinanceUI();
-    };
+    // List every tab ID here so they all hide when you switch
+    ['tabFinance', 'tabInv', 'tabTemps', 'tabLogs', 'tabReports'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
+    });
+    const target = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if(target) target.classList.remove('hidden');
+    
+    if(t === 'finance') updateFinanceUI();
+};
+
+
 
     window.calculateBilling = () => {
-        const fee = parseFloat(document.getElementById('feeConsult').value) || 0;
-        document.getElementById('secretCode').innerText = String(fee).split('').map(d => "ABCDEFGHIJ"[parseInt(d)] || d).join('');
-        let mTotal = 0;
-        currentRx.forEach(item => {
-            const med = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
-            if(med) {
-                let mult = item.freq.includes("BD")?2:item.freq.includes("TDS")?3:1;
-                mTotal += (parseFloat(item.unitQty) * mult * parseInt(item.days) * med.mrp);
+    const fee = parseFloat(document.getElementById('feeConsult').value) || 0;
+    let mTotal = 0;
+    
+    currentRx.forEach(item => {
+        const med = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
+        if(med) {
+            // Logic: If it's a liquid, we sell 1 bottle. If tablet, we multiply qty x frequency x days.
+            let isLiquid = item.name.toLowerCase().includes("syp") || item.name.toLowerCase().includes("susp") || item.name.toLowerCase().includes("drops");
+            
+            let totalQtyToCharge = 1; // Default for bottles
+            if (!isLiquid) {
+                let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
+                totalQtyToCharge = parseFloat(item.unitQty) * mult * parseInt(item.days);
             }
-        });
-        document.getElementById('totalBill').innerText = "₹" + (fee + mTotal).toFixed(2);
-        return { fee, mTotal };
-    };
+            
+            mTotal += (totalQtyToCharge * med.mrp);
+        }
+    });
+
+    // Update UI
+    document.getElementById('secretCode').innerText = String(fee).split('').map(d => "ABCDEFGHIJ"[parseInt(d)] || d).join('');
+    document.getElementById('totalBill').innerText = "₹" + (fee + mTotal).toFixed(2);
+    
+    return { fee, mTotal };
+};
+
 
     window.addMedRow = (name, freq, qty, days) => {
         const n = name || document.getElementById('rxMed').value;
@@ -261,24 +313,75 @@
     };
 
     window.processFinalPrint = async () => {
-        if(!pName.value) return alert("Name Required");
-        const billingInfo = calculateBilling();
-        const data = { 
-            name: pName.value, age: pAge.value, vitals: { bp: vBP.value, pr: vPR.value, temp: vTemp.value },
-            history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value),
-            extra: extraHistory.value, rx: currentRx, billing: { consult: billingInfo.fee, medTotal: billingInfo.mTotal, code: secretCode.innerText }, 
-            isObs: markObservation.checked, timestamp: serverTimestamp() 
-        };
-        for(let item of currentRx){
-            let sMed = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
-            if(sMed) {
-                let mult = item.freq.includes("BD")?2:item.freq.includes("TDS")?3:1;
-                await updateDoc(doc(db, "inventory", sMed.id), { stock: sMed.stock - (parseFloat(item.unitQty) * mult * parseInt(item.days)) });
-            }
-        }
-        activeId ? await updateDoc(doc(db, "prescriptions", activeId), data) : await addDoc(collection(db, "prescriptions"), data);
-        window.print(); location.reload();
+    if(!pName.value) return alert("Name Required");
+    
+    const billingInfo = calculateBilling();
+    
+    // 1. IMPROVED RETURN PATIENT LOGIC
+    const existingRecord = activeId ? logs.find(l => l.id === activeId) : null;
+    const oldMeds = (existingRecord && existingRecord.rx) ? existingRecord.rx.map(m => m.name.toLowerCase().trim()) : [];
+
+    const data = { 
+        name: pName.value, age: pAge.value, 
+        vitals: { bp: vBP.value, pr: vPR.value, temp: vTemp.value, weight: vWeight.value },
+        history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value),
+        extra: extraHistory.value, rx: currentRx, 
+        billing: { consult: billingInfo.fee, medTotal: billingInfo.mTotal, code: secretCode.innerText }, 
+        isObs: markObservation.checked, 
+        timestamp: serverTimestamp() 
     };
+
+    // 2. SMART STOCK DEDUCTION (Internal Inventory Only)
+    for(let item of currentRx){
+        const isNewMed = !oldMeds.includes(item.name.toLowerCase().trim());
+        
+        if(isNewMed) {
+            // Fix 3: Logic to check if medicine is in YOUR inventory
+            let sMed = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
+            
+            if(sMed) {
+                // Only deduct if sMed (the medicine in your list) exists
+                let isLiquid = item.name.toLowerCase().includes("syp") || item.name.toLowerCase().includes("susp") || item.name.toLowerCase().includes("drops");
+                let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
+                let deduction = isLiquid ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
+                
+                await updateDoc(doc(db, "inventory", sMed.id), { stock: sMed.stock - deduction });
+            } 
+            // If NOT in inventory, the loop just moves to the next item (Outdoor buy)
+        }
+    }
+
+    // 3. SAVE TO FIREBASE (Patient Record)
+    activeId ? await updateDoc(doc(db, "prescriptions", activeId), data) : await addDoc(collection(db, "prescriptions"), data);
+
+    // 4. NEW: AUTO-UPDATE DAILY FINANCE (Permanent Report)
+    try {
+        const todayStr = new Date().toISOString().split('T')[0]; // Gets YYYY-MM-DD
+        const dailyRef = doc(db, "daily_reports", todayStr);
+        await setDoc(dailyRef, {
+            date: todayStr,
+            revenueConsult: increment(billingInfo.fee),
+            revenueMeds: increment(billingInfo.mTotal),
+            totalPatients: increment(1)
+        }, { merge: true });
+    } catch (e) {
+        console.error("Finance log failed:", e);
+    }
+    
+    // 5. PRINT PREP
+    document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('value', el.value));
+    
+    window.print();
+    
+    // 6. CLEANUP
+    setTimeout(() => {
+        if(confirm("Transaction Saved. Start new patient?")) {
+            location.reload();
+        }
+    }, 1500);
+};
+
+
 
     function updateFinanceUI() {
         let f = 0, m = 0;
@@ -287,6 +390,73 @@
         document.getElementById('totalMedSales').innerText = "₹" + m.toFixed(2);
         document.getElementById('grandTotal').innerText = "₹" + (f + m).toFixed(2);
     }
+    window.generateReport = async (type) => {
+    const targetDate = document.getElementById('reportDate').value;
+    if(!targetDate) return alert("Select a date first!");
+    
+    const display = document.getElementById('reportResultUI');
+    display.innerHTML = "Calculating... Please wait.";
+
+    let totalConsult = 0, totalMed = 0, patientCount = 0;
+    let medSales = {}; // Tracks which medicine sold how much
+
+    // 1. Create the date range for the query
+    let start = new Date(targetDate);
+    let end = new Date(targetDate);
+    
+    if(type === 'day') {
+        end.setHours(23, 59, 59);
+    } else {
+        start.setDate(1); // Start of month
+        end.setMonth(end.getMonth() + 1);
+        end.setDate(0); // End of month
+        end.setHours(23, 59, 59);
+    }
+
+    // 2. Query Firestore for prescriptions in that range
+    const q = query(collection(db, "prescriptions"), 
+                where("timestamp", ">=", start), 
+                where("timestamp", "<=", end));
+    
+    const snap = await getDocs(q);
+    
+    snap.forEach(doc => {
+        const data = doc.data();
+        patientCount++;
+        totalConsult += parseFloat(data.billing?.consult || 0);
+        totalMed += parseFloat(data.billing?.medTotal || 0);
+        
+        // Count each medicine sold
+        (data.rx || []).forEach(item => {
+            // Only count if it's in our inventory
+            if(inventory.some(i => i.name.toLowerCase() === item.name.toLowerCase())) {
+                let qty = parseFloat(item.unitQty) * (item.freq.includes("BD")?2:item.freq.includes("TDS")?3:1) * parseInt(item.days);
+                medSales[item.name] = (medSales[item.name] || 0) + qty;
+            }
+        });
+    });
+
+    // 3. Build the UI Output
+    let medHtml = Object.entries(medSales).map(([name, qty]) => 
+        `<li>${name}: <strong>${qty.toFixed(1)} units</strong></li>`).join("");
+
+    display.innerHTML = `
+        <h3 style="margin-top:0; color:var(--primary); border-bottom:2px solid #eee;">
+            ${type.toUpperCase()} REPORT: ${targetDate}
+        </h3>
+        <div class="grid-3">
+            <div>Total Patients: <br><strong>${patientCount}</strong></div>
+            <div>Consultation: <br><strong>₹${totalConsult.toFixed(2)}</strong></div>
+            <div>Med Sales: <br><strong>₹${totalMed.toFixed(2)}</strong></div>
+        </div>
+        <hr>
+        <h4>Medicine Sales Summary:</h4>
+        <ul style="column-count: 2; font-size: 13px;">${medHtml || "No internal medicines sold."}</ul>
+        <div style="margin-top:15px; font-weight:bold; font-size:18px; color:var(--secondary);">
+            GRAND REVENUE: ₹${(totalConsult + totalMed).toFixed(2)}
+        </div>
+    `;
+};
 
     window.sync = async () => {
         const iSnap = await getDocs(collection(db, "inventory"));
