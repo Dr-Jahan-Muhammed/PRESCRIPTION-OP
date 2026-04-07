@@ -60,13 +60,17 @@
         <div id="prescription" class="section">
             <h3>1. Patient & Vitals</h3>
             <div class="grid-3">
-                <input id="pName" placeholder="Patient Name" style="grid-column: span 2; border-left: 5px solid var(--secondary); font-weight: bold;">
-                <input id="pAge" type="number" placeholder="Age" oninput="checkPediatric()">
-                <select id="pGender"><option>Male</option><option>Female</option></select>
-            </div>
+<input id="pName" placeholder="Patient Name" style="flex:2;">
+<input id="pAge" type="number" placeholder="Age">
+<select id="pGender">
+<option value="M">Male</option>
+<option value="F">Female</option>
+</select>
+<input id="pDate" type="date">
+</div>
             <div id="pediatricWarning" class="hidden" style="background:#e74c3c; color:white; padding:10px; margin:10px 0; border-radius:6px; font-weight:bold; text-align:center;">⚠️ PEDIATRIC DOSAGE: Patient is under 14 years!</div>
 
-            <div class="grid-3 no-print" style="margin-top:10px;">
+            <div id="vitalsBlock" class="grid-3" style="margin-top:10px;">
                 <input id="vBP" placeholder="BP">
                 <input id="vPR" placeholder="Pulse">
                 <input id="vTemp" placeholder="Temp">
@@ -187,8 +191,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, updateDoc, doc, getDocs, deleteDoc, serverTimestamp, query, orderBy, setDoc, increment, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, updateDoc, doc, getDocs, deleteDoc, serverTimestamp, query, orderBy, setDoc, increment, where, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     const firebaseConfig = {
         apiKey: "AIzaSyBdwITU8DS8u9cMEabaoLRAwqmS1P8AegA",
         authDomain: "prescription-drjmd.firebaseapp.com",
@@ -244,7 +247,9 @@
                 let totalQtyToCharge = 1; 
                 if (!isLiquid) {
                     let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
-                    totalQtyToCharge = parseFloat(item.unitQty) * mult * parseInt(item.days);
+                    const qty = parseFloat(item.unitQty) || 0;
+const days = parseInt(item.days) || 0;
+totalQtyToCharge = qty * mult * days;
                 }
                 mTotal += (totalQtyToCharge * med.mrp);
             }
@@ -253,7 +258,9 @@
         const total = fee + mTotal;
         let nurseString = toAlpha(fee);
         if(mTotal > 0) nurseString += " + " + toAlpha(mTotal);
-        if(printPriceCheck) nurseString += " MRP";
+       if(printPriceCheck){
+nurseString += " +MRP";
+}
 
         document.getElementById('secretCode').innerText = nurseString;
         document.getElementById('totalBill').innerText = "₹" + total.toFixed(2);
@@ -319,7 +326,7 @@
                 let isLiquid = item.name.toLowerCase().includes("syp") || item.name.toLowerCase().includes("susp") || item.name.toLowerCase().includes("drops");
                 let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
                 let deduction = isLiquid ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
-                await updateDoc(doc(db, "inventory", sMed.id), { stock: sMed.stock - deduction });
+                await updateDoc(doc(db, "inventory", sMed.id), { stock: increment(-deduction) });
             }
         }
 
@@ -331,7 +338,14 @@
             await setDoc(dailyRef, { date: todayStr, revenueConsult: increment(billingInfo.fee), revenueMeds: increment(billingInfo.mTotal), totalPatients: increment(1) }, { merge: true });
         } catch (e) { console.error(e); }
         
-        document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('value', el.value));
+        ["vBP","vPR","vTemp","vWeight"].forEach(id=>{
+let el=document.getElementById(id);
+if(!el.value.trim()){
+el.style.display="none";
+}
+});
+
+document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('value', el.value));
         window.print();
         setTimeout(() => { if(confirm("Transaction Saved. New patient?")) location.reload(); }, 1500);
     };
@@ -389,7 +403,10 @@
         
         // RE-ENABLED OBSERVATION FILTER
         const obsPatients = logs.filter(p => p.isObs === true);
-        document.getElementById('obsListUI').innerHTML = obsPatients.map(p => `<div class="item-row" style="background:#fff9e6; border-left: 4px solid var(--warning);"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">REVIEW</button></div>`).join("") || "None.";
+        document.getElementById('obsListUI').innerHTML =
+obsPatients.length ?
+obsPatients.map(p => `<div class="item-row" style="background:#fff9e6; border-left: 4px solid var(--warning);"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">REVIEW</button></div>`).join("")
+: "None.";
     };
 
     window.saveToInventory = async () => {
