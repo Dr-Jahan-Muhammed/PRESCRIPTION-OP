@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLINIC TITAN SUPREME - v30.2 IRONCLAD</title>
+    <title>CLINIC TITAN SUPREME - v30.1 IRONCLAD</title>
     <style>
         :root { --primary: #2c3e50; --secondary: #27ae60; --accent: #2980b9; --danger: #c0392b; --warning: #f39c12; --light: #f4f7f6; --white: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--light); color: #333; }
@@ -25,41 +25,28 @@
         .modal-content { background: white; width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 12px; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; margin-bottom: 5px; border-radius: 4px; }
         .finance-card { background: #fff; padding: 15px; border-radius: 10px; border-left: 5px solid var(--secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px; }
-
-        @media print { 
-            .no-print, nav, header, button, .modal-overlay, #pediatricWarning { display: none !important; } 
-            body { background: white; font-size: 13px; color: black; line-height: 1.1; }
-            .container { display: block; width: 100%; margin: 0; padding: 0; }
-            .section { border: none !important; box-shadow: none !important; padding: 5px !important; margin: 0 !important; }
-            
-            /* Concise Header: Name & Age on one line */
-            .grid-3 { display: flex !important; flex-direction: row !important; gap: 15px; flex-wrap: nowrap; margin-bottom: 5px; align-items: center; }
-            #pName { flex: 4; font-size: 16px !important; border-bottom: 1px dotted #666 !important; }
-            #pAge { flex: 1; }
-            #pGender { flex: 1; }
-
-            input, textarea, select { border: none !important; background: none !important; padding: 0 !important; appearance: none; -webkit-appearance: none; font-weight: bold; }
-            input:placeholder-shown { display: none !important; }
-            
-            .rx-table { margin-top: 5px; width: 100%; font-size: 13px; }
-            .rx-table th { background: #f0f0f0 !important; padding: 3px; border: 1px solid #000; }
-            .rx-table td { padding: 4px; border: 1px solid #eee; }
-
-            /* Nurse Code in Bottom Corner */
-            #secretCode { 
-                position: fixed; bottom: 5mm; right: 5mm; 
-                font-size: 11px !important; color: #555 !important; 
-                border: none !important; background: transparent !important;
-                font-family: monospace; display: block !important;
-            }
-            h3 { margin: 5px 0 2px 0; font-size: 14px; border-bottom: 1px solid #333; }
-        }
+    
+    /* PRINT OPTIMIZATION - CONCISE VERSION */
+    @media print { 
+        .no-print, nav, header, button, .modal-overlay, #pediatricWarning, .side-panel { display: none !important; } 
+        body { background: white; font-size: 12px; color: black; line-height: 1.1; }
+        .container { display: block; width: 100%; margin: 0; padding: 0; }
+        .section { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+        .grid-3 { display: flex !important; gap: 10px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        #pName { font-size: 16px !important; flex: 2; border: none !important; }
+        input, textarea, select { border: none !important; background: none !important; padding: 2px 0 !important; font-weight: bold; appearance: none; -webkit-appearance: none; }
+        .rx-table { margin-top: 10px; font-size: 12px; width: 100%; border: 1px solid #000; }
+        .rx-table th { background: #f0f0f0 !important; border: 1px solid #000; padding: 4px; }
+        .rx-table td { border: 1px solid #eee; padding: 4px; }
+        #secretCode { display: block !important; position: fixed; bottom: 10mm; right: 10mm; font-size: 11px !important; color: #555 !important; font-family: monospace; border: none !important; background: transparent !important;}
+        h3 { margin: 10px 0 5px 0; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #ddd; }
+    }
     </style>
 </head>
 <body>
 
 <header class="no-print">
-    <div><strong>CLINIC TITAN SUPREME</strong> <small>v30.2 Ironclad</small></div>
+    <div><strong>CLINIC TITAN SUPREME</strong> <small>v30.1 Ironclad Master</small></div>
     <div id="clock"></div>
 </header>
 
@@ -73,11 +60,11 @@
         <div id="prescription" class="section">
             <h3>1. Patient & Vitals</h3>
             <div class="grid-3">
-                <input id="pName" placeholder="Patient Name" style="border-left: 5px solid var(--secondary); font-weight: bold;">
+                <input id="pName" placeholder="Patient Name" style="grid-column: span 2; border-left: 5px solid var(--secondary); font-weight: bold;">
                 <input id="pAge" type="number" placeholder="Age" oninput="checkPediatric()">
                 <select id="pGender"><option>Male</option><option>Female</option></select>
             </div>
-            <div id="pediatricWarning" class="hidden" style="background:#e74c3c; color:white; padding:10px; margin:10px 0; border-radius:6px; font-weight:bold; text-align:center;">⚠️ PEDIATRIC DOSAGE: Under 14 years!</div>
+            <div id="pediatricWarning" class="hidden" style="background:#e74c3c; color:white; padding:10px; margin:10px 0; border-radius:6px; font-weight:bold; text-align:center;">⚠️ PEDIATRIC DOSAGE: Patient is under 14 years!</div>
 
             <div class="grid-3 no-print" style="margin-top:10px;">
                 <input id="vBP" placeholder="BP">
@@ -108,10 +95,10 @@
                 <textarea id="extraHistory" placeholder="Diagnosis / Notes..."></textarea>
             </div>
 
-            <h3 class="no-print" style="margin-top:20px;">3. Rx Builder</h3>
+            <h3 class="no-print" style="margin-top:20px;">3. Rx Builder (Live Editable)</h3>
             <div class="no-print" style="background:#f0f3f5; padding:15px; border-radius:8px; display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 50px; gap: 8px; align-items: end;">
                 <div><label>Medicine</label><input list="medInventory" id="rxMed" placeholder="Search..."></div>
-                <div><label>Freq</label>
+                <div><label>Frequency</label>
                     <select id="rxFreq">
                         <option value="1-0-1 (BD)">BD</option>
                         <option value="1-1-1 (TDS)">TDS</option>
@@ -132,10 +119,8 @@
 
             <div class="no-print" style="margin-top:20px; background:#fff3cd; padding:15px; border-radius:8px; display:flex; gap:20px;">
                 <label><input type="checkbox" id="markObservation"> <b>OBSERVATION BED</b></label>
-                <label><input type="checkbox" id="printPricing" checked onchange="calculateBilling()"> <b>+ MRP CODE</b></label>
+                <label><input type="checkbox" id="printPricing" checked> <b>+ MRP</b></label>
             </div>
-            
-            <div id="secretCode" style="display:none;">---</div>
         </div>
         <button class="btn-main no-print" onclick="processFinalPrint()">PRINT & SAVE TRANSACTION</button>
     </div>
@@ -147,11 +132,11 @@
             <input type="number" id="feeConsult" value="0" oninput="calculateBilling()">
             <div style="background:#e8f5e9; padding:10px; margin-top:10px; border-radius:5px; text-align:center;">
                 <small>Secret Alpha Code:</small>
-                <div id="secretCodeDisplay" style="font-size:26px; font-weight:bold; color: var(--secondary);">---</div>
+                <div id="secretCode" style="font-size:26px; font-weight:bold; color: var(--secondary);">---</div>
             </div>
             <div style="font-size:18px; text-align:center; font-weight:bold; margin-top:10px;">Total: <span id="totalBill">₹0</span></div>
         </div>
-        <div class="section no-print" style="margin-top:15px;">
+        <div class="section" style="margin-top:15px;">
             <h3>Observation List</h3>
             <div id="obsListUI" style="font-size:13px;">None.</div>
         </div>
@@ -162,9 +147,9 @@
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
             <h2>AUTHORIZED CONTROL</h2>
-            <button onclick="closeAdmin()" class="btn-danger">CLOSE</button>
+            <button onclick="closeAdmin()" class="btn-danger">CLOSE [ESC]</button>
         </div>
-        <div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
+        <div style="margin:15px 0; display:flex; gap:10px;">
             <button class="btn-sub" onclick="showAdminTab('finance')">Finance</button>
             <button class="btn-sub" onclick="showAdminTab('inv')">Inventory</button>
             <button class="btn-sub" onclick="showAdminTab('temps')">Templates</button>
@@ -180,16 +165,20 @@
         </div>
         <div id="tabInv" class="hidden">
             <div class="grid-3"><input id="invName" placeholder="Name"><input id="invStock" type="number" placeholder="Qty"><input id="invMRP" type="number" placeholder="MRP"></div>
-            <button class="btn-sub" id="invSaveBtn" onclick="saveToInventory()" style="width:100%; margin-top:10px;">SAVE ITEM</button>
+            <button class="btn-sub" id="invSaveBtn" onclick="saveToInventory()" style="width:100%; margin-top:10px;">SAVE / UPDATE ITEM</button>
             <div id="inventoryListUI" style="margin-top:15px;"></div>
         </div>
         <div id="tabTemps" class="hidden"><div id="templateListUI"></div></div>
         <div id="tabLogs" class="hidden"><div id="auditLogUI"></div></div>
         <div id="tabReports" class="hidden">
-            <input type="date" id="reportDate">
-            <button class="btn-sub" onclick="generateReport('day')">Daily Report</button>
-            <button class="btn-sub" onclick="generateReport('month')">Monthly Report</button>
-            <div id="reportResultUI" class="finance-card" style="margin-top:10px;">Select date...</div>
+            <div style="display:flex; gap:10px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:8px;">
+                <input type="date" id="reportDate" style="width:auto;">
+                <button class="btn-sub" onclick="generateReport('day')">Daily Report</button>
+                <button class="btn-sub" onclick="generateReport('month')">Monthly Report</button>
+            </div>
+            <div id="reportResultUI" class="finance-card" style="border-left-color: var(--accent); min-height: 200px;">
+                <p>Select a date and click a button to generate report...</p>
+            </div>
         </div>
     </div>
 </div>
@@ -212,7 +201,7 @@
     const app = initializeApp(firebaseConfig);
     const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 
-    let inventory = [], logs = [], currentRx = [], activeId = null, templates = [];
+    let inventory = [], logs = [], currentRx = [], activeId = null, templates = [], editingMedId = null;
 
     const clinicalMaster = {
         "Fever": [{name: "T. Paracetamol 650", freq: "1-1-1 (TDS)", unitQty: 1, days: 3}],
@@ -230,6 +219,7 @@
 
     window.openAdmin = () => { if(prompt("Auth?")==="1234") { document.getElementById('adminModal').classList.remove('hidden'); window.sync(); showAdminTab('finance'); } };
     window.closeAdmin = () => document.getElementById('adminModal').classList.add('hidden');
+    window.addEventListener('keydown', (e) => { if(e.key === "Escape") closeAdmin(); });
 
     window.showAdminTab = (t) => {
         ['tabFinance', 'tabInv', 'tabTemps', 'tabLogs', 'tabReports'].forEach(id => {
@@ -245,28 +235,28 @@
         const fee = parseFloat(document.getElementById('feeConsult').value) || 0;
         const printPriceCheck = document.getElementById('printPricing').checked;
         let mTotal = 0;
-        
         const toAlpha = (num) => String(Math.round(num)).split('').map(d => "ABCDEFGHIJ"[parseInt(d)] || d).join('');
 
         currentRx.forEach(item => {
             const med = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
             if(med) {
                 let isLiquid = item.name.toLowerCase().includes("syp") || item.name.toLowerCase().includes("susp") || item.name.toLowerCase().includes("drops");
-                let totalQty = 1; 
+                let totalQtyToCharge = 1; 
                 if (!isLiquid) {
                     let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
-                    totalQty = parseFloat(item.unitQty) * mult * parseInt(item.days);
+                    totalQtyToCharge = parseFloat(item.unitQty) * mult * parseInt(item.days);
                 }
-                mTotal += (totalQty * med.mrp);
+                mTotal += (totalQtyToCharge * med.mrp);
             }
         });
 
+        const total = fee + mTotal;
         let nurseString = toAlpha(fee);
-        if(printPriceCheck && mTotal > 0) nurseString += " + " + toAlpha(mTotal) + " MRP";
+        if(mTotal > 0) nurseString += " + " + toAlpha(mTotal);
+        if(printPriceCheck) nurseString += " MRP";
 
-        document.getElementById('secretCodeDisplay').innerText = nurseString;
         document.getElementById('secretCode').innerText = nurseString;
-        document.getElementById('totalBill').innerText = "₹" + (fee + mTotal).toFixed(2);
+        document.getElementById('totalBill').innerText = "₹" + total.toFixed(2);
         return { fee, mTotal };
     };
 
@@ -281,27 +271,30 @@
         document.getElementById('rxMed').value = "";
     };
 
+    window.updateInlineRx = (idx, field, val) => {
+        currentRx[idx][field] = val;
+        calculateBilling();
+    };
+
     function renderTable() {
         const b = document.getElementById('rxBody'); b.innerHTML = "";
         currentRx.forEach((item, idx) => {
             b.innerHTML += `<tr>
-                <td><input value="${item.name}" oninput="updateRx(${idx},'name',this.value)"></td>
-                <td><input value="${item.freq}" oninput="updateRx(${idx},'freq',this.value)" style="width:90px"></td>
-                <td><input value="${item.unitQty}" oninput="updateRx(${idx},'unitQty',this.value)" style="width:40px"></td>
-                <td><input value="${item.days}" oninput="updateRx(${idx},'days',this.value)" style="width:40px"></td>
+                <td><input type="text" value="${item.name}" oninput="updateInlineRx(${idx}, 'name', this.value)"></td>
+                <td><input type="text" value="${item.freq}" oninput="updateInlineRx(${idx}, 'freq', this.value)" style="width:90px"></td>
+                <td><input type="number" value="${item.unitQty}" oninput="updateInlineRx(${idx}, 'unitQty', this.value)" style="width:50px"></td>
+                <td><input type="number" value="${item.days}" oninput="updateInlineRx(${idx}, 'days', this.value)" style="width:50px"></td>
                 <td class="no-print"><button class="btn-danger" onclick="removeRx(${idx})">X</button></td>
             </tr>`;
         });
         calculateBilling();
     }
-    window.removeRx = (i) => { currentRx.splice(i,1); renderTable(); };
-    window.updateRx = (i, f, v) => { currentRx[i][f] = v; calculateBilling(); };
+    window.removeRx = (idx) => { currentRx.splice(idx,1); renderTable(); };
 
     window.applySymptomLogic = () => {
         const selected = Array.from(document.getElementById('templateSelector').selectedOptions);
         selected.forEach(opt => {
-            const t = templates.find(temp => temp.id === opt.value);
-            const meds = clinicalMaster[opt.value] || t?.rxData;
+            const meds = clinicalMaster[opt.value] || templates.find(t => t.id === opt.value)?.rxData;
             if(meds) meds.forEach(m => window.addMedRow(m.name || m.m, m.freq || m.f, m.unitQty || m.q, m.days || m.dy));
         });
         document.getElementById("historyCheckboxList").innerHTML = selected.map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s.text}"> ${s.text}</label>`).join("");
@@ -309,117 +302,117 @@
 
     window.processFinalPrint = async () => {
         if(!pName.value) return alert("Name Required");
-        const billing = calculateBilling();
-        const existing = activeId ? logs.find(l => l.id === activeId) : null;
-        const oldMeds = existing ? (existing.rx || []).map(m => m.name.toLowerCase().trim()) : [];
-
+        const billingInfo = calculateBilling();
         const data = { 
-            name: pName.value, age: pAge.value, vitals: { bp: vBP.value, pr: vPR.value, temp: vTemp.value, weight: vWeight.value },
+            name: pName.value, age: pAge.value, 
+            vitals: { bp: vBP.value, pr: vPR.value, temp: vTemp.value, weight: vWeight.value },
             history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value),
-            extra: extraHistory.value, rx: currentRx, billing: { consult: billing.fee, medTotal: billing.mTotal, code: secretCode.innerText }, 
-            isObs: markObservation.checked, timestamp: serverTimestamp() 
+            extra: extraHistory.value, rx: currentRx, 
+            billing: { consult: billingInfo.fee, medTotal: billingInfo.mTotal, code: secretCode.innerText }, 
+            isObs: markObservation.checked, 
+            timestamp: serverTimestamp() 
         };
 
         for(let item of currentRx){
-            if(!oldMeds.includes(item.name.toLowerCase().trim())) {
-                let sMed = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
-                if(sMed) {
-                    let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
-                    let deduction = item.name.toLowerCase().includes("syp") ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
-                    await updateDoc(doc(db, "inventory", sMed.id), { stock: increment(-deduction) });
-                }
+            let sMed = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
+            if(sMed) {
+                let isLiquid = item.name.toLowerCase().includes("syp") || item.name.toLowerCase().includes("susp") || item.name.toLowerCase().includes("drops");
+                let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
+                let deduction = isLiquid ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
+                await updateDoc(doc(db, "inventory", sMed.id), { stock: sMed.stock - deduction });
             }
         }
+
         activeId ? await updateDoc(doc(db, "prescriptions", activeId), data) : await addDoc(collection(db, "prescriptions"), data);
         
         try {
-            const today = new Date().toISOString().split('T')[0];
-            await setDoc(doc(db, "daily_reports", today), { date: today, revenueConsult: increment(billing.fee), revenueMeds: increment(billing.mTotal), totalPatients: increment(1) }, { merge: true });
-        } catch(e) {}
-
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dailyRef = doc(db, "daily_reports", todayStr);
+            await setDoc(dailyRef, { date: todayStr, revenueConsult: increment(billingInfo.fee), revenueMeds: increment(billingInfo.mTotal), totalPatients: increment(1) }, { merge: true });
+        } catch (e) { console.error(e); }
+        
         document.querySelectorAll('input, textarea').forEach(el => el.setAttribute('value', el.value));
         window.print();
-        setTimeout(() => { if(confirm("Start new patient?")) location.reload(); }, 1500);
+        setTimeout(() => { if(confirm("Transaction Saved. New patient?")) location.reload(); }, 1500);
     };
 
-    window.saveAsNewTemplate = async () => {
-        const n = prompt("Name?");
-        if(n) {
-            const hist = Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value);
-            await addDoc(collection(db, "templates"), { name: n, rxData: currentRx, historyData: hist, timestamp: serverTimestamp() });
-            sync(); 
-        }
-    };
-
-    window.recallTemplate = (id) => {
-        const t = templates.find(x => x.id === id);
-        if(t) {
-            currentRx = t.rxData || []; renderTable();
-            document.getElementById("historyCheckboxList").innerHTML = (t.historyData || []).map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s}"> ${s}</label>`).join("");
-            closeAdmin();
-        }
-    };
+    function updateFinanceUI() {
+        let f = 0, m = 0;
+        logs.forEach(l => { f += parseFloat(l.billing?.consult || 0); m += parseFloat(l.billing?.medTotal || 0); });
+        document.getElementById('totalFees').innerText = "₹" + f.toFixed(2);
+        document.getElementById('totalMedSales').innerText = "₹" + m.toFixed(2);
+        document.getElementById('grandTotal').innerText = "₹" + (f + m).toFixed(2);
+    }
 
     window.generateReport = async (type) => {
         const targetDate = document.getElementById('reportDate').value;
-        if(!targetDate) return alert("Select Date");
+        if(!targetDate) return alert("Select date!");
         const display = document.getElementById('reportResultUI');
         display.innerHTML = "Calculating...";
-        let totalC = 0, totalM = 0, count = 0, medSales = {};
-
+        let totalConsult = 0, totalMed = 0, patientCount = 0, medSales = {};
         let start = new Date(targetDate);
         let end = new Date(targetDate);
-        if(type === 'day') { start.setHours(0,0,0,0); end.setHours(23,59,59,999); }
-        else { start.setDate(1); end.setMonth(end.getMonth()+1); end.setDate(0); end.setHours(23,59,59,999); }
+        if(type === 'day') end.setHours(23, 59, 59);
+        else { start.setDate(1); end.setMonth(end.getMonth() + 1); end.setDate(0); end.setHours(23, 59, 59); }
 
         const q = query(collection(db, "prescriptions"), where("timestamp", ">=", start), where("timestamp", "<=", end));
         const snap = await getDocs(q);
         snap.forEach(doc => {
-            const d = doc.data(); count++; totalC += parseFloat(d.billing?.consult || 0); totalM += parseFloat(d.billing?.medTotal || 0);
-            (d.rx || []).forEach(item => {
-                if(inventory.some(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim())) {
-                    let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
-                    medSales[item.name] = (medSales[item.name] || 0) + (parseFloat(item.unitQty) * mult * parseInt(item.days));
+            const data = doc.data();
+            patientCount++;
+            totalConsult += parseFloat(data.billing?.consult || 0);
+            totalMed += parseFloat(data.billing?.medTotal || 0);
+            (data.rx || []).forEach(item => {
+                if(inventory.some(i => i.name.toLowerCase() === item.name.toLowerCase())) {
+                    let qty = parseFloat(item.unitQty) * (item.freq.includes("BD")?2:item.freq.includes("TDS")?3:1) * parseInt(item.days);
+                    medSales[item.name] = (medSales[item.name] || 0) + qty;
                 }
             });
         });
 
-        display.innerHTML = `<h4>REPORT</h4><p>Patients: ${count}</p><p>Total: ₹${(totalC + totalM).toFixed(2)}</p><ul>${Object.entries(medSales).map(([n, q]) => `<li>${n}: ${q}</li>`).join("")}</ul>`;
+        display.innerHTML = `<h4>${type.toUpperCase()} REPORT: ${targetDate}</h4><p>Patients: ${patientCount}</p><p>Total: ₹${(totalConsult + totalMed).toFixed(2)}</p>`;
     };
 
     window.sync = async () => {
         const iSnap = await getDocs(collection(db, "inventory"));
         inventory = iSnap.docs.map(d => ({id: d.id, ...d.data()}));
         document.getElementById('medInventory').innerHTML = inventory.map(m => `<option value="${m.name}">`).join("");
-        document.getElementById('inventoryListUI').innerHTML = inventory.map(m => `<div class="item-row"><span>${m.name} (${m.stock})</span><button class="btn-danger" onclick="deleteMed('${m.id}')">DEL</button></div>`).join("");
+        document.getElementById('inventoryListUI').innerHTML = inventory.map(m => `<div class="item-row"><span>${m.name} (${m.stock})</span><button class="btn-sub" onclick="editMed('${m.id}')">EDIT</button></div>`).join("");
 
         const tSnap = await getDocs(collection(db, "templates"));
         templates = tSnap.docs.map(d => ({id: d.id, ...d.data()}));
         document.getElementById('dynamicOptGroup').innerHTML = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
-        document.getElementById('templateListUI').innerHTML = templates.map(t => `<div class="item-row"><span>${t.name}</span><button class="btn-sub" onclick="recallTemplate('${t.id}')">LOAD</button></div>`).join("");
 
         const lSnap = await getDocs(query(collection(db, "prescriptions"), orderBy("timestamp", "desc")));
         logs = lSnap.docs.map(d => ({id: d.id, ...d.data()}));
         document.getElementById('auditLogUI').innerHTML = logs.map(p => `<div class="item-row"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">LOAD</button></div>`).join("");
-        document.getElementById('obsListUI').innerHTML = logs.filter(p => p.isObs).map(p => `<div class="item-row" style="background:#fff9e6;"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">REVIEW</button></div>`).join("") || "None.";
+        
+        // RE-ENABLED OBSERVATION FILTER
+        const obsPatients = logs.filter(p => p.isObs === true);
+        document.getElementById('obsListUI').innerHTML = obsPatients.map(p => `<div class="item-row" style="background:#fff9e6; border-left: 4px solid var(--warning);"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">REVIEW</button></div>`).join("") || "None.";
     };
 
     window.saveToInventory = async () => {
-        await addDoc(collection(db, "inventory"), { name: invName.value, stock: parseFloat(invStock.value), mrp: parseFloat(invMRP.value) });
-        invName.value=""; invStock.value=""; invMRP.value=""; sync();
+        const data = { name: invName.value, stock: parseFloat(invStock.value), mrp: parseFloat(invMRP.value) };
+        editingMedId ? await updateDoc(doc(db, "inventory", editingMedId), data) : await addDoc(collection(db, "inventory"), data);
+        invName.value = ""; invStock.value = ""; invMRP.value = ""; editingMedId = null; sync();
     };
 
     window.recallPatient = (id) => {
         const p = logs.find(x => x.id === id);
-        activeId = id; pName.value = p.name; pAge.value = p.age || ""; extraHistory.value = p.extra || "";
-        currentRx = p.rx || []; renderTable(); closeAdmin();
+        activeId = id; pName.value = p.name; pAge.value = p.age || ""; feeConsult.value = p.billing?.consult || 0;
+        extraHistory.value = p.extra || ""; currentRx = p.rx || []; renderTable(); closeAdmin();
         document.getElementById("historyCheckboxList").innerHTML = (p.history || []).map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s}"> ${s}</label>`).join("");
     };
 
-    window.deleteMed = async (id) => { if(confirm("Del?")) { await deleteDoc(doc(db, "inventory", id)); sync(); } };
+    window.editMed = (id) => {
+        const m = inventory.find(i => i.id === id);
+        invName.value = m.name; invStock.value = m.stock; invMRP.value = m.mrp;
+        editingMedId = id; document.getElementById('invSaveBtn').innerText = "UPDATE MEDICINE";
+    };
+
     sync();
     setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString(); }, 1000);
 </script>
 </body>
 </html>
- 
