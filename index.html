@@ -28,7 +28,7 @@
     
       /* PRINT OPTIMIZATION - CONCISE VERSION */
         /* PRINT OPTIMIZATION - CONCISE VERSION */
-   .print-data { display: none; } /* Hide on screen */
+  .print-only { display: none; } /* Hide on screen */
 
 @media print { 
     /* 1. Hide everything unnecessary */
@@ -37,15 +37,15 @@
         display: none !important; 
     } 
 
-    /* 2. Show the Spans where the data was copied */
-    .print-data { 
+    /* 2. MATCHING CLASS NAME: Show the Spans */
+    .print-only { 
         display: inline-block !important; 
         font-weight: bold; 
         font-size: 14px; 
         min-width: 50px; 
     }
 
-    /* 3. Force the Secret Nurse Code to appear */
+    /* 3. Nurse Code Positioning */
     #secretCode { 
         display: block !important; 
         visibility: visible !important;
@@ -69,11 +69,13 @@
         margin-bottom: 10px; 
         border-bottom: 1px solid #000; 
         padding-bottom: 5px; 
+        align-items: center;
     }
 
     h3 { margin: 15px 0 5px 0; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #eee; }
-    .rx-table { width: 100%; border: 1px solid #000; }
+    .rx-table { width: 100%; border: 1px solid #000; border-collapse: collapse; }
 }
+
 
 
 
@@ -396,93 +398,72 @@
         document.getElementById("historyCheckboxList").innerHTML = selected.map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s.text}"> ${s.text}</label>`).join("");
     };
 
-        window.processFinalPrint = async () => {
+ window.processFinalPrint = async () => {
     try {
-        // 1. Explicitly grab elements
         const nameEl = document.getElementById('pName');
-        const ageEl = document.getElementById('pAge');
-        const extraEl = document.getElementById('extraHistory');
-        const obsEl = document.getElementById('markObservation');
-
-        if (!nameEl.value) {
-            return alert("Patient Name is Required");
-        }
+        if (!nameEl.value) return alert("Patient Name is Required");
 
         const billing = window.calculateBilling();
         
-        // 2. Map history checkboxes
-        const historyData = Array.from(document.querySelectorAll("#historyCheckboxList input:checked"))
-            .map(i => i.value);
+        // 1. SAFE DATA COPYING (Won't crash if ID is missing)
+        const setText = (id, val) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val;
+        };
 
+        setText('pNamePrint', nameEl.value);
+        setText('pAgePrint', document.getElementById('pAge').value + " Yrs");
+        setText('pGenderPrint', document.getElementById('pGender').value);
+
+        const dVal = document.getElementById('pDate').value;
+        if(dVal) {
+            const [y, m, d] = dVal.split('-');
+            setText('pDatePrint', `${d}-${m}-${y}`);
+        }
+
+        // 2. TRANSACTION DATA
         const data = { 
             name: nameEl.value, 
-            age: ageEl.value, 
+            age: document.getElementById('pAge').value, 
             vitals: { 
                 bp: document.getElementById('vBP').value, 
                 pr: document.getElementById('vPR').value, 
                 temp: document.getElementById('vTemp').value, 
                 weight: document.getElementById('vWeight').value 
             },
-            history: historyData,
-            extra: extraEl.value, 
+            history: Array.from(document.querySelectorAll("#historyCheckboxList input:checked")).map(i => i.value),
+            extra: document.getElementById('extraHistory').value, 
             rx: currentRx, 
             billing: { 
                 consult: billing.fee, 
                 medTotal: billing.mTotal, 
                 code: document.getElementById('secretCode').innerText 
             }, 
-            isObs: obsEl.checked, 
+            isObs: document.getElementById('markObservation').checked, 
             timestamp: serverTimestamp() 
         };
 
-        // 3. Stock Deduction Logic
+        // 3. STOCK DEDUCTION
         for (let item of currentRx) {
             let sMed = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
             if (sMed) {
                 let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
                 let isLiquid = item.name.toLowerCase().match(/syp|susp|drops/);
                 let deduction = isLiquid ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
-                
-                await updateDoc(doc(db, "inventory", sMed.id), { 
-                    stock: increment(-deduction) 
-                });
+                await updateDoc(doc(db, "inventory", sMed.id), { stock: increment(-deduction) });
             }
         }
         
-        // 4. Save to Firestore
+        // 4. SAVE & PRINT
         await addDoc(collection(db, "prescriptions"), data);
-
-        // 5. UI Cleanup for Print
-        ["vBP","vPR","vTemp","vWeight"].forEach(id => { 
-            let el = document.getElementById(id); 
-            if(!el.value) el.style.display="none"; 
-        });
-
-        // Ensure all inputs show their current value on the printed page
-        document.querySelectorAll('input, textarea').forEach(el => {
-            el.setAttribute('value', el.value);
-            if(el.tagName === "TEXTAREA") el.innerHTML = el.value;
-        });
-        // Copy values to print spans
-document.getElementById('pNamePrint').innerText = document.getElementById('pName').value;
-document.getElementById('pAgePrint').innerText = document.getElementById('pAge').value + " Yrs";
-document.getElementById('pGenderPrint').innerText = document.getElementById('pGender').value;
-
-// Format Date for print (dd-mm-yyyy)
-const dVal = document.getElementById('pDate').value;
-if(dVal) {
-    const [y, m, d] = dVal.split('-');
-    document.getElementById('pDatePrint').innerText = `${d}-${m}-${y}`;
-}
-
-        // 6. Execute Print
+        
+        // Final UI cleanup and trigger print
+        document.body.classList.add('print-mode'); // Your "Popup" trigger
         window.print();
-
-        // 7. Reload after a delay to clear the form
         setTimeout(() => location.reload(), 1500);
 
     } catch (error) {
-        console.error("Error during Print/Save:", error);
+        console.error("Error:", error);
         alert("Transaction Failed: " + error.message);
     }
 };
