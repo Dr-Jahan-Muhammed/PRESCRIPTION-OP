@@ -68,11 +68,18 @@
         text-align: left;
     }
 
-    #secretCode { 
+        #secretCode { 
         display: block !important; 
-        position: fixed; bottom: 10mm; right: 10mm; 
-        font-family: monospace; font-size: 14px; font-weight: bold;
+        visibility: visible !important;
+        position: relative !important; /* Changed from fixed */
+        margin-top: 10px !important;
+        font-size: 14px !important; 
+        color: #000 !important; 
+        font-family: monospace !important; 
+        font-weight: bold !important;
+        text-align: right; /* Aligns it to the right under the table */
     }
+
 }
 
 
@@ -95,8 +102,7 @@
 <div class="container">
     <div class="main-panel">
         <div id="prescription" class="section">
-               <div id="secretCode" style="display: none;"></div>
-
+             
             <h3>1. Patient & Vitals</h3>
             <div class="grid-3">
     <div style="flex:2;">
@@ -189,8 +195,9 @@
                 <tbody id="rxBody"></tbody>
             </table>
 
-            <div class="no-print" style="margin-top:20px; background:#fff3cd; padding:15px; border-radius:8px; display:flex; gap:20px;">
-                <label><input type="checkbox" id="markObservation"> <b>OBSERVATION BED</b></label>
+   <div id="secretCode" class="print-only" style="margin-top: 10px; font-family: monospace;"></div>
+
+            <div class="no-print" style="margin-top:20px; background:#fff3cd; padding:15px; border-radius:8px; display:flex; gap:20px;">           <label><input type="checkbox" id="markObservation"> <b>OBSERVATION BED</b></label>
                 <label><input type="checkbox" id="printPricing" checked> <b>+ MRP</b></label>
             </div>
         </div>
@@ -368,12 +375,18 @@
     document.getElementById('totalBill').innerText = "₹" + (fee + mTotal).toFixed(2);
 
     // 2. Update Hidden Print Code (For Nurse)
-    let nurseCode = toAlpha(fee);
-    if(printCheck && mTotal > 0) nurseCode += " + " + toAlpha(mTotal) + " MRP";
+    let nurseCode = toAlpha(fee); // Alphabet code for Consult Fee only
+    
+    if(printCheck && mTotal > 0) {
+        // We removed toAlpha(mTotal) here so it doesn't show code for MRP
+        nurseCode += " + MRP"; 
+    }
+    
     document.getElementById('secretCode').innerText = nurseCode;
     
     return { fee, mTotal };
 };
+
 
 
     window.addMedRow = (name, freq, qty, days) => {
@@ -444,36 +457,30 @@ window.processFinalPrint = async () => {
         const nameEl = document.getElementById('pName');
         if (!nameEl.value) return alert("Patient Name is Required");
 
-        // 1. SMART TEXT SETTER (Hides label if value is empty)
         const setPrintField = (inputId, printId, containerId, suffix = "") => {
-    const inputEl = document.getElementById(inputId);
-    const printEl = document.getElementById(printId);
-    const containerEl = document.getElementById(containerId);
+            const inputEl = document.getElementById(inputId);
+            const printEl = document.getElementById(printId);
+            const containerEl = document.getElementById(containerId);
+            if (!inputEl) return;
+            const val = inputEl.value.trim();
+            if (val) {
+                if (printEl) printEl.innerText = val + suffix;
+                if (containerEl) containerEl.style.display = "inline";
+            } else {
+                if (containerEl) containerEl.style.display = "none";
+            }
+        };
 
-    if (!inputEl) return; // Skip if input doesn't exist
-
-    const val = inputEl.value.trim();
-    if (val) {
-        if (printEl) printEl.innerText = val + suffix;
-        if (containerEl) containerEl.style.display = "inline";
-    } else {
-        if (containerEl) containerEl.style.display = "none";
-    }
-};
-
-
-        // Populate Patient Details
+        // Populate Patient Details for Printer
         document.getElementById('pNamePrint').innerText = nameEl.value;
         document.getElementById('pAgePrint').innerText = document.getElementById('pAge').value + " Yrs";
         document.getElementById('pGenderPrint').innerText = document.getElementById('pGender').value;
 
-        // Populate Vitals with Smart Hiding
         setPrintField('vBP', 'vBPPrint', 'vBPContainer');
         setPrintField('vPR', 'vPRPrint', 'vPRContainer');
         setPrintField('vTemp', 'vTempPrint', 'vTempContainer');
         setPrintField('vWeight', 'vWeightPrint', 'vWeightContainer', " kg");
 
-        // Format Date for Print
         const dVal = document.getElementById('pDate').value;
         if(dVal) {
             const [y, m, d] = dVal.split('-');
@@ -482,7 +489,25 @@ window.processFinalPrint = async () => {
 
         const billing = window.calculateBilling();
 
-        // 2. DATA FOR FIREBASE
+        // --- SMART STOCK DEDUCTION LOGIC ---
+        // Get old record if this is a review patient
+        const existingRecord = activeId ? logs.find(l => l.id === activeId) : null;
+        const oldMeds = (existingRecord && existingRecord.rx) ? existingRecord.rx.map(m => m.name.toLowerCase().trim()) : [];
+
+        for (let item of currentRx) {
+            const medNameClean = item.name.toLowerCase().trim();
+            // ONLY deduct stock if this medicine was NOT in the previous list
+            if (!oldMeds.includes(medNameClean)) {
+                let sMed = inventory.find(i => i.name.toLowerCase().trim() === medNameClean);
+                if (sMed) {
+                    let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
+                    let isLiquid = medNameClean.match(/syp|susp|drops/);
+                    let deduction = isLiquid ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
+                    await updateDoc(doc(db, "inventory", sMed.id), { stock: increment(-deduction) });
+                }
+            }
+        }
+
         const data = { 
             name: nameEl.value, 
             age: document.getElementById('pAge').value, 
@@ -504,62 +529,120 @@ window.processFinalPrint = async () => {
             timestamp: serverTimestamp() 
         };
 
-        // 3. STOCK DEDUCTION
-        for (let item of currentRx) {
-            let sMed = inventory.find(i => i.name.toLowerCase().trim() === item.name.toLowerCase().trim());
-            if (sMed) {
-                let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
-                let isLiquid = item.name.toLowerCase().match(/syp|susp|drops/);
-                let deduction = isLiquid ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
-                await updateDoc(doc(db, "inventory", sMed.id), { stock: increment(-deduction) });
-            }
+        // If activeId exists, update the old record; otherwise, create a new one
+        if (activeId) {
+            await updateDoc(doc(db, "prescriptions", activeId), data);
+        } else {
+            await addDoc(collection(db, "prescriptions"), data);
         }
         
-        await addDoc(collection(db, "prescriptions"), data);
-        
-        // 4. FINAL PRINT
         setTimeout(() => {
             window.print();
             setTimeout(() => location.reload(), 1000);
         }, 300);
 
     } catch (error) {
-        console.error("Error:", error);
         alert("Transaction Failed: " + error.message);
     }
 };
 
 
 
-
-    window.generateReport = async (type) => {
+     window.generateReport = async (type) => {
         const targetDate = document.getElementById('reportDate').value;
         if(!targetDate) return alert("Select date!");
         const display = document.getElementById('reportResultUI');
-        display.innerHTML = "Calculating...";
-        let totalConsult = 0, totalMed = 0, patientCount = 0, medSales = {};
+        display.innerHTML = "Generating Detailed Report...";
+
+        let totalConsult = 0, totalMed = 0, patientCount = 0;
+        let medStats = {}; // Tracks { name: {qty, rev} }
+
         let start = new Date(targetDate);
         let end = new Date(targetDate);
-        if(type === 'day') end.setHours(23, 59, 59);
-        else { start.setDate(1); end.setMonth(end.getMonth() + 1); end.setDate(0); end.setHours(23, 59, 59); }
+        
+        if(type === 'day') {
+            start.setHours(0,0,0,0);
+            end.setHours(23,59,59,999);
+        } else {
+            start.setDate(1); 
+            start.setHours(0,0,0,0);
+            end.setMonth(end.getMonth() + 1); 
+            end.setDate(0); 
+            end.setHours(23,59,59,999);
+        }
 
-        const q = query(collection(db, "prescriptions"), where("timestamp", ">=", start), where("timestamp", "<=", end));
+        const q = query(collection(db, "prescriptions"), 
+                    where("timestamp", ">=", start), 
+                    where("timestamp", "<=", end));
+        
         const snap = await getDocs(q);
+        
         snap.forEach(doc => {
             const data = doc.data();
             patientCount++;
             totalConsult += parseFloat(data.billing?.consult || 0);
             totalMed += parseFloat(data.billing?.medTotal || 0);
+
             (data.rx || []).forEach(item => {
-                if(inventory.some(i => i.name.toLowerCase() === item.name.toLowerCase())) {
-                    let qty = parseFloat(item.unitQty) * (item.freq.includes("BD")?2:item.freq.includes("TDS")?3:1) * parseInt(item.days);
-                    medSales[item.name] = (medSales[item.name] || 0) + qty;
+                const medName = item.name.trim();
+                // Match with inventory to get the price
+                const invItem = inventory.find(i => i.name.toLowerCase().trim() === medName.toLowerCase());
+                if(invItem) {
+                    let mult = item.freq.includes("BD") ? 2 : item.freq.includes("TDS") ? 3 : 1;
+                    let isLiquid = medName.toLowerCase().match(/syp|susp|drops/);
+                    let qtySold = isLiquid ? 1 : (parseFloat(item.unitQty) * mult * parseInt(item.days));
+                    let revenue = qtySold * invItem.mrp;
+
+                    if(!medStats[medName]) medStats[medName] = { qty: 0, rev: 0 };
+                    medStats[medName].qty += qtySold;
+                    medStats[medName].rev += revenue;
                 }
             });
         });
 
-        display.innerHTML = `<h4>${type.toUpperCase()} REPORT: ${targetDate}</h4><p>Patients: ${patientCount}</p><p>Total: ₹${(totalConsult + totalMed).toFixed(2)}</p>`;
+        // Create the table rows for medicines
+        let medRows = Object.entries(medStats).map(([name, stat]) => `
+            <tr>
+                <td style="border-bottom:1px solid #eee; padding:5px;">${name}</td>
+                <td style="border-bottom:1px solid #eee; padding:5px;">${stat.qty.toFixed(1)}</td>
+                <td style="border-bottom:1px solid #eee; padding:5px; text-align:right;">₹${stat.rev.toFixed(2)}</td>
+            </tr>
+        `).join("");
+
+        // Final UI Output
+        display.innerHTML = `
+            <h3 style="margin:0 0 10px 0; color:var(--primary); border-bottom:2px solid var(--accent);">
+                ${type.toUpperCase()} REPORT: ${targetDate}
+            </h3>
+            
+            <div class="grid-3" style="margin-bottom:15px; gap:10px;">
+                <div class="finance-card" style="padding:10px; border-left-color:var(--secondary);">
+                    <small>Fees</small><br><b>₹${totalConsult.toFixed(2)}</b>
+                </div>
+                <div class="finance-card" style="padding:10px; border-left-color:var(--accent);">
+                    <small>Meds</small><br><b>₹${totalMed.toFixed(2)}</b>
+                </div>
+                <div class="finance-card" style="padding:10px; border-left-color:var(--primary);">
+                    <small>Patients</small><br><b>${patientCount}</b>
+                </div>
+            </div>
+
+            <div style="background:#fff; padding:10px; border-radius:8px; border:1px solid #ddd; max-height:300px; overflow-y:auto;">
+                <h4 style="margin:0 0 5px 0;">Medicine Sales Summary</h4>
+                <table style="width:100%; font-size:12px; border-collapse:collapse;">
+                    <thead style="background:#f8f9fa; position:sticky; top:0;">
+                        <tr><th style="text-align:left;">Name</th><th>Qty</th><th style="text-align:right;">Total</th></tr>
+                    </thead>
+                    <tbody>${medRows || "<tr><td colspan='3'>No medicine data.</td></tr>"}</tbody>
+                </table>
+            </div>
+
+            <div style="margin-top:15px; font-size:18px; font-weight:bold; text-align:right; color:var(--secondary);">
+                GRAND TOTAL: ₹${(totalConsult + totalMed).toFixed(2)}
+            </div>
+        `;
     };
+
 
     window.sync = async () => {
     const iSnap = await getDocs(collection(db, "inventory"));
@@ -571,28 +654,45 @@ window.processFinalPrint = async () => {
     templates = tSnap.docs.map(d => ({id: d.id, ...d.data()}));
     document.getElementById('dynamicOptGroup').innerHTML = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join("");
 
-    // --- ADD THIS LINE BELOW ---
+    // Template List with Delete Button
     document.getElementById('templateListUI').innerHTML = templates.map(t => `
-    <div class="item-row" style="border-left: 4px solid var(--accent);">
-        <span><strong>${t.name}</strong></span>
-        <div style="display:flex; gap:5px;">
-            <button class="btn-sub" onclick="editTemplate('${t.id}')">EDIT</button>
-            <button class="btn-danger" onclick="deleteTemplate('${t.id}')">X</button>
+        <div class="item-row" style="border-left: 4px solid var(--accent);">
+            <span><strong>${t.name}</strong></span>
+            <div style="display:flex; gap:5px;">
+                <button class="btn-sub" onclick="editTemplate('${t.id}')">EDIT</button>
+                <button class="btn-danger" onclick="deleteTemplate('${t.id}')">X</button>
+            </div>
         </div>
-    </div>
-`).join("");
+    `).join("");
 
-    // ---------------------------
-
+    // Sorted History List with Delete Button
     const lSnap = await getDocs(query(collection(db, "prescriptions"), orderBy("timestamp", "desc")));
     logs = lSnap.docs.map(d => ({id: d.id, ...d.data()}));
-    document.getElementById('auditLogUI').innerHTML = logs.map(p => `<div class="item-row"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">LOAD</button></div>`).join("");
+    document.getElementById('auditLogUI').innerHTML = logs.map(p => {
+        const dStr = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleDateString() : 'N/A';
+        return `<div class="item-row">
+            <span><b>${dStr}</b> - ${p.name}</span>
+            <div style="display:flex; gap:5px;">
+                <button class="btn-sub" onclick="recallPatient('${p.id}')">LOAD</button>
+                <button class="btn-danger" onclick="deleteHistoryRecord('${p.id}')">DEL</button>
+            </div>
+        </div>`;
+    }).join("");
     
     const obsPatients = logs.filter(p => p.isObs === true);
     document.getElementById('obsListUI').innerHTML = obsPatients.length ?
         obsPatients.map(p => `<div class="item-row" style="background:#fff9e6; border-left: 4px solid var(--warning);"><span>${p.name}</span><button class="btn-sub" onclick="recallPatient('${p.id}')">REVIEW</button></div>`).join("")
         : "None.";
 };
+
+// Supporting function to delete History
+window.deleteHistoryRecord = async (id) => {
+    if(confirm("Permanently delete this patient record?")) {
+        await deleteDoc(doc(db, "prescriptions", id));
+        sync();
+    }
+};
+
 
 
        window.saveToInventory = async () => {
