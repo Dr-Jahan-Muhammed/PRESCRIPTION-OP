@@ -31,49 +31,36 @@
   .print-only { display: none; } /* Hide on screen */
 
 @media print { 
-    /* 1. Hide everything unnecessary */
-    .no-print, nav, header, button, .modal-overlay, #pediatricWarning, .side-panel, .btn-danger,
-    input, select, textarea { 
+    .no-print, nav, header, button, .modal-overlay, #pediatricWarning, .side-panel, input, select, textarea { 
         display: none !important; 
     } 
 
-    /* 2. MATCHING CLASS NAME: Show the Spans */
-    .print-only { 
-        display: inline-block !important; 
-        font-weight: bold; 
-        font-size: 14px; 
-        min-width: 50px; 
+    .print-only { display: inline-block !important; font-weight: bold; }
+
+    body { background: white; font-size: 14px; color: black; margin: 0; padding: 20mm; }
+    .container { display: block; width: 100%; }
+    .section { border: none !important; box-shadow: none !important; }
+    
+    /* Better Header for Print */
+    .grid-3 { 
+        display: grid !important; 
+        grid-template-columns: 2fr 1fr 1fr;
+        border-bottom: 2px solid #000;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
     }
 
-    /* 3. Nurse Code Positioning */
+    h3 { margin-top: 20px; border-bottom: 1px solid #ccc; font-size: 16px; }
+
+    .rx-table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+    .rx-table th { border-bottom: 2px solid #000; text-align: left; }
+    .rx-table td { padding: 8px 0; border-bottom: 1px dotted #ccc; }
+
     #secretCode { 
         display: block !important; 
-        visibility: visible !important;
-        position: fixed !important; 
-        bottom: 10mm !important; 
-        right: 10mm !important; 
-        font-size: 14px !important; 
-        color: #000 !important; 
-        font-family: monospace !important; 
-        font-weight: bold !important;
+        position: fixed; bottom: 10mm; right: 10mm; 
+        font-family: monospace; font-size: 12px;
     }
-
-    /* 4. Reset Layout for paper */
-    body { background: white; font-size: 12px; color: black; line-height: 1.2; }
-    .container { display: block; width: 100%; margin: 0; padding: 0; }
-    .section { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
-    
-    .grid-3 { 
-        display: flex !important; 
-        gap: 20px; 
-        margin-bottom: 10px; 
-        border-bottom: 1px solid #000; 
-        padding-bottom: 5px; 
-        align-items: center;
-    }
-
-    h3 { margin: 15px 0 5px 0; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #eee; }
-    .rx-table { width: 100%; border: 1px solid #000; border-collapse: collapse; }
 }
 
 
@@ -115,17 +102,36 @@
         </select>
         <span class="print-only" id="pGenderPrint"></span>
     </div>
+    <div style="display: flex; gap: 5px; align-items: center;">
     <input id="pDate" type="date">
+    <span class="print-only" id="pDatePrint"></span>
+</div>
+
 </div>
 
             <div id="pediatricWarning" class="hidden" style="background:#e74c3c; color:white; padding:10px; margin:10px 0; border-radius:6px; font-weight:bold; text-align:center;">⚠️ PEDIATRIC DOSAGE: Patient is under 14 years!</div>
 
             <div id="vitalsBlock" class="grid-3" style="margin-top:10px;">
-                <input id="vBP" placeholder="BP">
-                <input id="vPR" placeholder="Pulse">
-                <input id="vTemp" placeholder="Temp">
-                <input id="vWeight" placeholder="Weight">
-            </div>
+    <div>
+        <input id="vBP" placeholder="BP">
+        <span class="print-only" id="vBPContainer">BP: <b id="vBPPrint"></b></span>
+    </div>
+    <div>
+        <input id="vPR" placeholder="Pulse">
+        <span class="print-only" id="vPRContainer">PR: <b id="vPRPrint"></b></span>
+    </div>
+    <div>
+        <input id="vTemp" placeholder="Temp">
+        <span class="print-only" id="vTempContainer">Temp: <b id="vTempPrint"></b></span>
+    </div>
+    <div>
+        <input id="vWeight" placeholder="Weight">
+        <span class="print-only" id="vWeightContainer">Wt: <b id="vWeightPrint"></b> kg</span>
+    </div>
+</div>
+
+
+
 
             <div class="no-print" style="margin-top:20px;">
                 <h3>2. Clinical Symptoms</h3>
@@ -390,38 +396,64 @@
     window.removeRx = (idx) => { currentRx.splice(idx,1); renderTable(); };
 
     window.applySymptomLogic = () => {
-        const selected = Array.from(document.getElementById('templateSelector').selectedOptions);
-        selected.forEach(opt => {
-            const meds = clinicalMaster[opt.value] || templates.find(t => t.id === opt.value)?.rxData;
-            if(meds) meds.forEach(m => window.addMedRow(m.name || m.m, m.freq || m.f, m.unitQty || m.q, m.days || m.dy));
-        });
-        document.getElementById("historyCheckboxList").innerHTML = selected.map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s.text}"> ${s.text}</label>`).join("");
-    };
+    const selected = Array.from(document.getElementById('templateSelector').selectedOptions);
+    const list = document.getElementById("historyCheckboxList"); // Add this
+    
+    selected.forEach(opt => {
+        const meds = clinicalMaster[opt.value] || templates.find(t => t.id === opt.value)?.rxData;
+        if(meds) meds.forEach(m => window.addMedRow(m.name || m.m, m.freq || m.f, m.unitQty || m.q, m.days || m.dy));
+    });
 
- window.processFinalPrint = async () => {
+    if(list) { // Add this check
+        list.innerHTML = selected.map(s => `<label style="background:#eee; padding:5px; border-radius:4px; font-size:12px; margin-right:5px;"><input type="checkbox" checked value="${s.text}"> ${s.text}</label>`).join("");
+    }
+};
+
+
+window.processFinalPrint = async () => {
     try {
         const nameEl = document.getElementById('pName');
         if (!nameEl.value) return alert("Patient Name is Required");
 
-        const billing = window.calculateBilling();
-        
-        // 1. SAFE DATA COPYING (Won't crash if ID is missing)
-        const setText = (id, val) => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = val;
-        };
+        // 1. SMART TEXT SETTER (Hides label if value is empty)
+        const setPrintField = (inputId, printId, containerId, suffix = "") => {
+    const inputEl = document.getElementById(inputId);
+    const printEl = document.getElementById(printId);
+    const containerEl = document.getElementById(containerId);
 
-        setText('pNamePrint', nameEl.value);
-        setText('pAgePrint', document.getElementById('pAge').value + " Yrs");
-        setText('pGenderPrint', document.getElementById('pGender').value);
+    if (!inputEl) return; // Skip if input doesn't exist
 
+    const val = inputEl.value.trim();
+    if (val) {
+        if (printEl) printEl.innerText = val + suffix;
+        if (containerEl) containerEl.style.display = "inline";
+    } else {
+        if (containerEl) containerEl.style.display = "none";
+    }
+};
+
+
+        // Populate Patient Details
+        document.getElementById('pNamePrint').innerText = nameEl.value;
+        document.getElementById('pAgePrint').innerText = document.getElementById('pAge').value + " Yrs";
+        document.getElementById('pGenderPrint').innerText = document.getElementById('pGender').value;
+
+        // Populate Vitals with Smart Hiding
+        setPrintField('vBP', 'vBPPrint', 'vBPContainer');
+        setPrintField('vPR', 'vPRPrint', 'vPRContainer');
+        setPrintField('vTemp', 'vTempPrint', 'vTempContainer');
+        setPrintField('vWeight', 'vWeightPrint', 'vWeightContainer', " kg");
+
+        // Format Date for Print
         const dVal = document.getElementById('pDate').value;
         if(dVal) {
             const [y, m, d] = dVal.split('-');
-            setText('pDatePrint', `${d}-${m}-${y}`);
+            document.getElementById('pDatePrint').innerText = `${d}-${m}-${y}`;
         }
 
-        // 2. TRANSACTION DATA
+        const billing = window.calculateBilling();
+
+        // 2. DATA FOR FIREBASE
         const data = { 
             name: nameEl.value, 
             age: document.getElementById('pAge').value, 
@@ -454,19 +486,21 @@
             }
         }
         
-        // 4. SAVE & PRINT
         await addDoc(collection(db, "prescriptions"), data);
         
-        // Final UI cleanup and trigger print
-        document.body.classList.add('print-mode'); // Your "Popup" trigger
-        window.print();
-        setTimeout(() => location.reload(), 1500);
+        // 4. FINAL PRINT
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => location.reload(), 1000);
+        }, 300);
 
     } catch (error) {
         console.error("Error:", error);
         alert("Transaction Failed: " + error.message);
     }
 };
+
+
 
 
     window.generateReport = async (type) => {
